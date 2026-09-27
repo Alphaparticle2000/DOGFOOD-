@@ -86,7 +86,8 @@ DOGFOOD/
 │   │       └── helpers.py                               [TO CREATE]
 │   │
 │   ├── tests/
-│   │   ├── __init__.py                                  [TO CREATE]
+│   │   ├── __init__.py                                  [EXISTING — SAHIL]
+│   │   ├── test_health.py                               [EXISTING — SAHIL]
 │   │   ├── test_users.py                                 [TO CREATE]
 │   │   ├── test_events.py                                [TO CREATE]
 │   │   ├── test_teams.py                                 [TO CREATE]
@@ -104,7 +105,7 @@ DOGFOOD/
 │   │
 │   ├── requirements.txt                                  [EXISTING — SAHIL]
 │   ├── Dockerfile                                        [EXISTING — SAHIL]
-│   └── pytest.ini                                        [TO CREATE]
+│   └── pytest.ini                                        [EXISTING — SAHIL]
 │
 ├── frontend/
 │   │
