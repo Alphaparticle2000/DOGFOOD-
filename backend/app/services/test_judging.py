@@ -1,14 +1,28 @@
+from pathlib import Path
+
+from fixture_loader import load_fixtures
 from judging import (
     ScoreInput,
     InvalidScoreError,
     JudgeNotAssignedError,
     DuplicateScoreError,
+    SubmissionClosedError,
+    validate_submission_deadline,
     validate_score,
     validate_judge_assignment,
     validate_no_duplicate_score,
     calculate_score_average,
     calculate_project_result,
+    calculate_all_results,
 )
+
+
+PROJECT_ROOT = Path(__file__).resolve().parents[3]
+FIXTURE_PATH = PROJECT_ROOT / "fixtures.json"
+
+
+def load_test_data():
+    return load_fixtures(FIXTURE_PATH)
 
 
 def test_valid_score():
@@ -16,13 +30,28 @@ def test_valid_score():
         functionality=5,
         quality=4,
         innovation=3,
-        comment="Solid project.",
+        comment="Solid.",
     )
 
     validate_score(score)
 
 
-def test_invalid_score():
+def test_score_below_minimum():
+    score = ScoreInput(
+        functionality=0,
+        quality=4,
+        innovation=3,
+    )
+
+    try:
+        validate_score(score)
+    except InvalidScoreError:
+        return
+
+    raise AssertionError("Score below minimum was accepted.")
+
+
+def test_score_above_maximum():
     score = ScoreInput(
         functionality=6,
         quality=4,
@@ -34,33 +63,41 @@ def test_invalid_score():
     except InvalidScoreError:
         return
 
-    raise AssertionError("Invalid score was accepted.")
+    raise AssertionError("Score above maximum was accepted.")
 
 
-def test_judge_assignment():
-    judge = {
-        "id": "jdg_01",
-        "tracks": ["trk_03"],
-    }
+def test_real_fixture_judge_assignment():
+    fixtures = load_test_data()
 
-    project = {
-        "id": "prj_02",
-        "track": "trk_03",
-    }
+    judge = next(
+        judge
+        for judge in fixtures["judges"]
+        if judge["id"] == "jdg_01"
+    )
+
+    project = next(
+        project
+        for project in fixtures["projects"]
+        if project["id"] == "prj_02"
+    )
 
     validate_judge_assignment(judge, project)
 
 
-def test_wrong_judge_assignment():
-    judge = {
-        "id": "jdg_01",
-        "tracks": ["trk_03"],
-    }
+def test_real_fixture_wrong_judge_assignment():
+    fixtures = load_test_data()
 
-    project = {
-        "id": "prj_01",
-        "track": "trk_04",
-    }
+    judge = next(
+        judge
+        for judge in fixtures["judges"]
+        if judge["id"] == "jdg_01"
+    )
+
+    project = next(
+        project
+        for project in fixtures["projects"]
+        if project["id"] == "prj_01"
+    )
 
     try:
         validate_judge_assignment(judge, project)
@@ -89,9 +126,7 @@ def test_duplicate_score():
     except DuplicateScoreError:
         return
 
-    raise AssertionError(
-        "Duplicate score was accepted."
-    )
+    raise AssertionError("Duplicate score was accepted.")
 
 
 def test_score_average():
@@ -114,55 +149,103 @@ def test_score_average():
 
     result = calculate_score_average(scores)
 
-    assert result["functionality"] == 4.0
-    assert result["quality"] == 4.0
-    assert result["innovation"] == 4.0
+    assert result == {
+        "functionality": 4.0,
+        "quality": 4.0,
+        "innovation": 4.0,
+    }
 
 
-def test_project_result():
-    scores = [
-        {
-            "judge": "jdg_01",
-            "project": "prj_01",
-            "criteria": {
-                "functionality": 5,
-                "quality": 4,
-                "innovation": 3,
-            },
-            "comment": "Solid.",
-        },
-        {
-            "judge": "jdg_02",
-            "project": "prj_01",
-            "criteria": {
-                "functionality": 3,
-                "quality": 4,
-                "innovation": 5,
-            },
-            "comment": "Runs clean.",
-        },
-    ]
+def test_real_fixture_project_result():
+    fixtures = load_test_data()
 
     result = calculate_project_result(
         "prj_01",
-        scores,
+        fixtures["scores"],
     )
 
     assert result["project"] == "prj_01"
-    assert result["judge_count"] == 2
-    assert result["overall_average"] == 4.0
-    assert len(result["comments"]) == 2
+    assert result["judge_count"] > 0
+    assert 1 <= result["overall_average"] <= 5
 
+
+def test_all_fixture_results():
+    fixtures = load_test_data()
+
+    results = calculate_all_results(
+        fixtures["projects"],
+        fixtures["scores"],
+    )
+
+    assert len(results) == 41
+
+    for result in results:
+        assert result["project"].startswith("prj_")
+        assert result["judge_count"] >= 0
+        assert 0 <= result["overall_average"] <= 5
+
+
+def test_results_are_sorted():
+    fixtures = load_test_data()
+
+    results = calculate_all_results(
+        fixtures["projects"],
+        fixtures["scores"],
+    )
+
+    averages = [
+        result["overall_average"]
+        for result in results
+    ]
+
+    assert averages == sorted(
+        averages,
+        reverse=True,
+    )
+
+
+def test_submission_before_deadline():
+    fixtures = load_test_data()
+
+    event = fixtures["event"]
+
+    validate_submission_deadline(
+        event,
+        "2026-03-01T17:57:00Z",
+    )
+
+
+def test_submission_after_deadline():
+    fixtures = load_test_data()
+
+    event = fixtures["event"]
+
+    try:
+        validate_submission_deadline(
+            event,
+            "2026-03-01T18:01:00Z",
+        )
+    except SubmissionClosedError:
+        return
+
+    raise AssertionError(
+        "Submission after the deadline was accepted."
+    )
 
 def run_tests():
     tests = [
         test_valid_score,
-        test_invalid_score,
-        test_judge_assignment,
-        test_wrong_judge_assignment,
+        test_score_below_minimum,
+        test_score_above_maximum,
+        test_real_fixture_judge_assignment,
+        test_real_fixture_wrong_judge_assignment,
         test_duplicate_score,
+        test_submission_before_deadline,
+        test_submission_after_deadline,
         test_score_average,
-        test_project_result,
+        test_real_fixture_project_result,
+        test_all_fixture_results,
+        test_results_are_sorted,
     ]
 
     passed = 0

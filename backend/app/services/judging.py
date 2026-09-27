@@ -1,4 +1,5 @@
 from __future__ import annotations
+from datetime import datetime
 
 from dataclasses import dataclass
 from typing import Any
@@ -14,6 +15,9 @@ class InvalidScoreError(JudgingError):
 
 class JudgeNotAssignedError(JudgingError):
     """Raised when a judge is not assigned to the project's track."""
+
+class SubmissionClosedError(JudgingError):
+    """Raised when an action occurs after the submission deadline."""
 
 
 class DuplicateScoreError(JudgingError):
@@ -128,6 +132,26 @@ def validate_submission(
     validate_score(score)
 
 
+def validate_submission_deadline(
+    event: dict[str, Any],
+    submitted_at: str,
+) -> None:
+    """
+    Ensure a submission was made before the event submission deadline.
+    """
+
+    deadline = datetime.fromisoformat(
+        event["submissions_close"].replace("Z", "+00:00")
+    )
+
+    submission_time = datetime.fromisoformat(
+        submitted_at.replace("Z", "+00:00")
+    )
+
+    if submission_time > deadline:
+        raise SubmissionClosedError(
+            "Submission was made after the submission deadline."
+        )
 def calculate_score_average(
     scores: list[dict[str, Any]],
 ) -> dict[str, float]:
