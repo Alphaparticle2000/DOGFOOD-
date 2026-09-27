@@ -14,66 +14,64 @@ DOGFOOD/
 │
 ├── .github/
 │   └── workflows/
-│       └── ci.yml                                      [TO CREATE]
+│       └── ci.yml                                      [EXISTING — SAHIL]
 │
 ├── backend/
 │   │
 │   ├── app/
 │   │   │
-│   │   ├── __init__.py                                 [TO CREATE]
+│   │   ├── __init__.py                                 [EXISTING — SAHIL]
 │   │   │
-│   │   ├── main.py                                     [TO CREATE]
+│   │   ├── main.py                                     [EXISTING — SAHIL]
 │   │   │
 │   │   ├── api/
-│   │   │   ├── __init__.py                             [TO CREATE]
+│   │   │   ├── __init__.py                             [EXISTING — SAHIL]
 │   │   │   │
-│   │   │   ├── dependencies.py                         [TO CREATE]
+│   │   │   ├── dependencies.py                         [EXISTING — SAHIL]
 │   │   │   │
 │   │   │   └── routes/
 │   │   │       ├── __init__.py                          [TO CREATE]
-│   │   │       ├── auth.py                              [TO CREATE]
-│   │   │       ├── users.py                             [TO CREATE]
-│   │   │       ├── events.py                            [TO CREATE]
-│   │   │       ├── teams.py                             [TO CREATE]
-│   │   │       ├── submissions.py                       [TO CREATE]
-│   │   │       ├── judges.py                            [TO CREATE]
-│   │   │       ├── rubrics.py                           [TO CREATE]
-│   │   │       ├── scores.py                            [TO CREATE]
-│   │   │       ├── votes.py                             [TO CREATE]
-│   │   │       ├── comments.py                          [TO CREATE]
-│   │   │       └── results.py                           [TO CREATE]
+│   │   │       ├── users.py                             [TO CREATE — DIKSHANT]
+│   │   │       ├── events.py                            [TO CREATE — DIKSHANT]
+│   │   │       ├── teams.py                             [TO CREATE — DIKSHANT]
+│   │   │       ├── submissions.py                       [TO CREATE — DIKSHANT]
+│   │   │       ├── judges.py                            [TO CREATE — DIKSHANT]
+│   │   │       ├── rubrics.py                           [TO CREATE — DIKSHANT]
+│   │   │       ├── scores.py                            [TO CREATE — DIKSHANT]
+│   │   │       ├── votes.py                             [TO CREATE — DIKSHANT]
+│   │   │       ├── comments.py                          [TO CREATE — DIKSHANT]
+│   │   │       └── results.py                           [TO CREATE — DIKSHANT]
 │   │   │
 │   │   ├── core/
-│   │   │   ├── __init__.py                              [TO CREATE]
-│   │   │   ├── config.py                                [TO CREATE]
-│   │   │   ├── database.py                              [TO CREATE]
-│   │   │   └── security.py                              [TO CREATE]
+│   │   │   ├── __init__.py                              [EXISTING — SAHIL]
+│   │   │   ├── config.py                                [EXISTING — SAHIL]
+│   │   │   ├── database.py                              [EXISTING — SAHIL]
+│   │   │   └── security.py                              [EXISTING — SAHIL]
 │   │   │
 │   │   ├── models/
 │   │   │   ├── __init__.py                              [TO CREATE]
-│   │   │   ├── user.py                                  [TO CREATE]
-│   │   │   ├── event.py                                 [TO CREATE]
-│   │   │   ├── team.py                                  [TO CREATE]
-│   │   │   ├── submission.py                            [TO CREATE]
-│   │   │   ├── judge.py                                 [TO CREATE]
-│   │   │   ├── rubric.py                                [TO CREATE]
-│   │   │   ├── score.py                                 [TO CREATE]
-│   │   │   ├── vote.py                                  [TO CREATE]
-│   │   │   ├── comment.py                               [TO CREATE]
-│   │   │   └── audit_log.py                             [TO CREATE]
+│   │   │   ├── user.py                                  [TO CREATE — DIKSHANT]
+│   │   │   ├── event.py                                 [TO CREATE — DIKSHANT]
+│   │   │   ├── team.py                                  [TO CREATE — DIKSHANT]
+│   │   │   ├── submission.py                            [TO CREATE — DIKSHANT]
+│   │   │   ├── judge.py                                 [TO CREATE — DIKSHANT]
+│   │   │   ├── rubric.py                                [TO CREATE — DIKSHANT]
+│   │   │   ├── score.py                                 [TO CREATE — DIKSHANT]
+│   │   │   ├── vote.py                                  [TO CREATE — DIKSHANT]
+│   │   │   ├── comment.py                               [TO CREATE — DIKSHANT]
+│   │   │   └── audit_log.py                             [TO CREATE — DIKSHANT]
 │   │   │
 │   │   ├── schemas/
 │   │   │   ├── __init__.py                              [TO CREATE]
-│   │   │   ├── auth.py                                  [TO CREATE]
-│   │   │   ├── user.py                                  [TO CREATE]
-│   │   │   ├── event.py                                 [TO CREATE]
-│   │   │   ├── team.py                                  [TO CREATE]
-│   │   │   ├── submission.py                            [TO CREATE]
-│   │   │   ├── judge.py                                 [TO CREATE]
-│   │   │   ├── rubric.py                                [TO CREATE]
-│   │   │   ├── score.py                                 [TO CREATE]
-│   │   │   ├── vote.py                                  [TO CREATE]
-│   │   │   └── comment.py                               [TO CREATE]
+│   │   │   ├── user.py                                  [TO CREATE — DIKSHANT]
+│   │   │   ├── event.py                                 [TO CREATE — DIKSHANT]
+│   │   │   ├── team.py                                  [TO CREATE — DIKSHANT]
+│   │   │   ├── submission.py                            [TO CREATE — DIKSHANT]
+│   │   │   ├── judge.py                                 [TO CREATE — DIKSHANT]
+│   │   │   ├── rubric.py                                [TO CREATE — DIKSHANT]
+│   │   │   ├── score.py                                 [TO CREATE — DIKSHANT]
+│   │   │   ├── vote.py                                  [TO CREATE — DIKSHANT]
+│   │   │   └── comment.py                               [TO CREATE — DIKSHANT]
 │   │   │
 │   │   ├── services/
 │   │   │   ├── __init__.py                              [EXISTING]
@@ -89,7 +87,6 @@ DOGFOOD/
 │   │
 │   ├── tests/
 │   │   ├── __init__.py                                  [TO CREATE]
-│   │   ├── test_auth.py                                  [TO CREATE]
 │   │   ├── test_users.py                                 [TO CREATE]
 │   │   ├── test_events.py                                [TO CREATE]
 │   │   ├── test_teams.py                                 [TO CREATE]
@@ -100,13 +97,13 @@ DOGFOOD/
 │   │   └── test_results.py                               [TO CREATE]
 │   │
 │   ├── alembic/
-│   │   ├── env.py                                       [TO CREATE]
-│   │   ├── script.py.mako                               [TO CREATE]
+│   │   ├── env.py                                       [TO CREATE — DIKSHANT]
+│   │   ├── script.py.mako                               [TO CREATE — DIKSHANT]
 │   │   └── versions/
-│   │       └── ...                                      [TO CREATE]
+│   │       └── ...                                      [TO CREATE — DIKSHANT]
 │   │
-│   ├── requirements.txt                                  [TO CREATE]
-│   ├── Dockerfile                                        [TO CREATE]
+│   ├── requirements.txt                                  [EXISTING — SAHIL]
+│   ├── Dockerfile                                        [EXISTING — SAHIL]
 │   └── pytest.ini                                        [TO CREATE]
 │
 ├── frontend/
@@ -134,11 +131,13 @@ DOGFOOD/
 │   │   │   └── Results/
 │   │   │
 │   │   ├── services/
-│   │   │   └── api.ts                                   [TO CREATE]
+│   │   │   ├── api.ts                                   [TO CREATE — HIMANSHU]
+│   │   │   └── supabase.ts                              [TO CREATE — HIMANSHU]
 │   │   │
 │   │   ├── hooks/
 │   │   │
 │   │   ├── context/
+│   │   │   └── AuthContext.tsx                          [TO CREATE — HIMANSHU]
 │   │   │
 │   │   ├── types/
 │   │   │
@@ -153,20 +152,45 @@ DOGFOOD/
 │
 ├── fixtures.json                                         [EXISTING]
 │
-├── docker-compose.yml                                    [TO CREATE]
+├── docker-compose.yml                                    [EXISTING — SAHIL]
 │
 ├── docker/
 │   └── postgres/
-│       └── ...                                           [TO CREATE]
+│       └── init.sql                                      [EXISTING — SAHIL]
 │
-├── .env.example                                         [TO CREATE]
+├── .env.example                                         [EXISTING — SAHIL]
 │
 ├── .gitignore                                             [EXISTING]
 │
 ├── README.md                                              [EXISTING]
 │
-└── REPO_STRUCTURE.md                                      [THIS FILE]
+└── repo.md                                                [THIS FILE]
 ```
+
+---
+
+# SUPABASE INTEGRATION ARCHITECTURE
+
+The DOGFOOD platform integrates **Supabase** as the unified Identity, PostgreSQL Database, and Object Storage layer.
+
+### 1. Authentication Flow (Supabase Auth)
+* **Identity Provider:** Supabase Auth is the **sole source of truth** for user credentials, email confirmation, and OAuth (GitHub/Google).
+* **Client Sign-In:** Himanshu's frontend uses `@supabase/supabase-js` to log in users directly.
+* **Token Handshake:** Supabase returns an `access_token` (JWT). The frontend attaches this token as `Authorization: Bearer <token>` on all requests to Dikshant's FastAPI backend.
+* **Backend Validation:** FastAPI uses `backend/app/core/security.py` (`verify_supabase_token`) and `backend/app/api/dependencies.py` (`get_current_user`, `require_role`) to verify the JWT using `SUPABASE_JWT_SECRET` (or dev debug bypass) and extract the user's role (`admin`, `judge`, `participant`).
+* **NO Custom Password Auth in FastAPI:** Dikshant does **not** build custom password hashing, user registration with passwords, or JWT generation endpoints in FastAPI.
+
+### 2. Database & Schema Conventions (Supabase PostgreSQL)
+* **User Primary Key:** All database foreign keys referencing users (`user_id`) must use **UUID** (`UUID(as_uuid=True)` in SQLAlchemy) matching Supabase `auth.users(id)`. Never use integer IDs for users.
+* **Public User Profile:** `models/user.py` maps to `public.users` storing application-specific profile data (display name, bio, avatar URL, team affiliations).
+* **Alembic Schema Isolation:** Supabase manages internal schemas (`auth`, `storage`, `vault`, `extensions`). Dikshant's Alembic `env.py` **must restrict migrations strictly to the `public` schema** (`include_schemas=['public']`) to avoid dropping or altering Supabase system tables.
+* **Connection Routing:**
+  * **FastAPI Runtime:** Connects via `DATABASE_URL` (Supabase connection pooler or direct connection).
+  * **Alembic Migrations:** Must run against direct connection (Port `5432` / Session mode), **not** the transaction pooler (Port `6543`), to support DDL locking.
+
+### 3. File & Submission Storage (Supabase Storage)
+* **Submissions Bucket:** Project demo media, screenshots, pitch decks, and code archives are stored in Supabase Storage buckets (e.g. `submissions`).
+* **Upload Strategy:** Frontend uploads media directly to Supabase Storage using the user's authenticated Supabase session, storing the resulting public/signed URLs in Dikshant's `submissions` API.
 
 ---
 
@@ -214,31 +238,31 @@ Primary area:
 ```text
 backend/app/
 ├── api/
+│   └── routes/
+│       ├── users.py
+│       ├── events.py
+│       ├── teams.py
+│       ├── submissions.py
+│       ├── judges.py
+│       ├── rubrics.py
+│       ├── scores.py
+│       ├── votes.py
+│       ├── comments.py
+│       └── results.py
 ├── models/
 ├── schemas/
-├── core/
-└── main.py
+└── alembic/
 ```
 
 Responsibilities:
 
-* FastAPI setup
-* API routes
-* Authentication
-* Users
-* Events
-* Teams
-* Submissions
-* Judges
-* Rubrics API
-* Score API
-* Votes
-* Comments
-* Results
-* Database models
-* Database relationships
-* CRUD
-* Migrations
+* API routes (Users, Events, Teams, Submissions, Judges, Rubrics, Scores, Votes, Comments, Results)
+* User profile endpoints (`/api/users/me` — tied to Supabase JWT `sub` claim)
+* Database models & relationships (PostgreSQL via SQLAlchemy)
+* **UUID user references:** All `user_id` columns typed as UUID to match Supabase Auth
+* CRUD operations
+* Alembic migrations (restricted to `public` schema)
+* Integration with Mridul's judging engine (`judging.py`)
 * Backend API tests
 
 Dikshant should call the existing judging engine rather than duplicate it.
@@ -246,13 +270,15 @@ Dikshant should call the existing judging engine rather than duplicate it.
 Expected flow:
 
 ```text
-API route
+API route (authenticated via Supabase JWT)
     ↓
-Validation
+Role / Permission Validation (dependencies.py)
     ↓
 Judging service
     ↓
 judging.py
+    ↓
+Database commit
     ↓
 Result
 ```
@@ -265,44 +291,38 @@ Primary ownership:
 
 ```text
 docker-compose.yml
-Dockerfile
+backend/Dockerfile
 docker/
 .github/workflows/
 .env.example
 ```
 
-Backend infrastructure:
+Backend infrastructure & security layer:
 
 ```text
-backend/app/core/
-├── config.py
-├── database.py
-└── security.py
-```
-
-Potential security/dependency layer:
-
-```text
-backend/app/api/dependencies.py
+backend/app/
+├── main.py
+├── core/
+│   ├── config.py
+│   ├── database.py
+│   └── security.py
+└── api/
+    └── dependencies.py
 ```
 
 Responsibilities:
 
-* Docker
-* Docker Compose
-* PostgreSQL
-* Container networking
-* Environment configuration
-* CI/CD
-* Security configuration
-* CORS
-* Rate limiting
-* RBAC infrastructure
-* Health checks
-* Backend/frontend integration
+* Docker & Docker Compose setup
+* Supabase configuration & connection pooling integration
+* Local fallback PostgreSQL container (with `uuid-ossp` and `pgcrypto` matching Supabase defaults)
+* Container networking & health probes (`/health`, `/health/db`)
+* Supabase JWT validation (`security.py`) & RBAC dependencies (`dependencies.py`)
+* Environment configuration (`.env.example`, `config.py`)
+* CI/CD GitHub Actions workflow (`ci.yml`)
+* CORS middleware configuration for frontend Vite client
 * Deployment readiness
 
-Sahil should not rewrite Dikshant's application APIs.
+Sahil should not rewrite Dikshant's application domain APIs.
 
 ---
 
@@ -333,69 +353,62 @@ Judging
 Results
 ```
 
-Participant navbar:
+Frontend Supabase integration:
 
 ```text
-Dashboard
-My Team
-Submission
-Gallery
-Results
-```
-
-Judge/admin-specific:
-
-```text
-Judging
+src/services/supabase.ts   (Supabase client initialization)
+src/context/AuthContext.tsx (Supabase Auth session provider)
+src/services/api.ts        (FastAPI Axios client with Supabase Bearer token)
 ```
 
 Responsibilities:
 
-* UI
-* Navigation
-* Dashboard
-* Login
-* Team interface
-* Submission interface
-* Gallery
-* Judging interface
-* Results interface
-* Responsive layout
-* API integration
+* UI & UX components
+* Supabase Client initialization & Auth (Login, Sign-Up, OAuth, Session state)
+* Attaching Supabase Bearer JWT to backend API requests
+* Direct submission asset uploads to Supabase Storage
+* Dashboard, Team, Submission, Gallery, Judging, Results interfaces
+* Responsive layout & cross-device compatibility
 
 ---
 
 # SYSTEM FLOW
 
 ```text
-                    ┌───────────────┐
-                    │   FRONTEND    │
-                    │   Himanshu    │
-                    └───────┬───────┘
-                            │
-                         REST API
-                            │
-                            ▼
-                    ┌───────────────┐
-                    │    FASTAPI    │
-                    │   Dikshant    │
-                    └───────┬───────┘
-                            │
-              ┌─────────────┼─────────────┐
-              │             │             │
-              ▼             ▼             ▼
-        Authentication   Judging       Database
-              │          Engine
-              │             │
-              │          Mridul
-              │
-              └─────────────┼─────────────┘
-                            │
-                            ▼
-                       PostgreSQL
+                                 ┌─────────────────────────┐
+                                 │   FRONTEND (Himanshu)   │
+                                 │       React + Vite      │
+                                 └───────────┬─────────────┘
+                                             │
+                       ┌─────────────────────┴─────────────────────┐
+                       │                                           │
+             1. Auth / Token Login                       2. REST API Calls
+             & Direct File Uploads                       (Bearer Supabase JWT)
+                       │                                           │
+                       ▼                                           ▼
+             ┌───────────────────┐                       ┌───────────────────┐
+             │     SUPABASE      │                       │  FASTAPI BACKEND  │
+             │   Auth & Storage  │                       │ (Dikshant/Sahil)  │
+             └─────────┬─────────┘                       └─────────┬─────────┘
+                       │                                           │
+                       │                                   3. Validate JWT
+                       │                                      & Check RBAC
+                       │                                   (dependencies.py)
+                       │                                           │
+                       │                                   4. Call Judging
+                       │                                       Logic (Mridul)
+                       │                                           │
+                       ▼                                           ▼
+             ┌───────────────────────────────────────────────────────────────┐
+             │                     SUPABASE POSTGRESQL                       │
+             │                   (Managed Cloud Database)                    │
+             │                                                               │
+             │   - auth.users (Credentials & UUIDs managed by Supabase)      │
+             │   - public.* (Teams, Events, Scores, Submissions by Dikshant) │
+             └───────────────────────────────────────────────────────────────┘
 ```
 
-Sahil provides the Docker, networking, security and CI/CD layer around the system.
+Sahil provides the Docker, networking, security, Supabase configuration, and CI/CD layer around the entire stack.
 
 ---
 
@@ -457,16 +470,20 @@ git push
 
 ---
 
-# ARCHITECTURE RULE
+# ARCHITECTURE RULES
 
 Do not duplicate functionality between team members.
 
 ```text
+AUTHENTICATION & STORAGE
+Supabase
+        │
+        ▼
 FRONTEND
 Himanshu
         │
         ▼
-API
+API ROUTING & MODELS
 Dikshant
         │
         ▼
@@ -474,37 +491,37 @@ BUSINESS LOGIC
 Mridul
         │
         ▼
-DATABASE
-Dikshant
+DATABASE & SCHEMA
+Dikshant (SQLAlchemy / Alembic public schema)
         │
         ▼
-INFRASTRUCTURE
-Sahil
+INFRASTRUCTURE & SECURITY
+Sahil (Docker, JWT Auth, Database pooling, CI/CD)
 ```
 
 For judging:
 
 ```text
-Himanshu
+Himanshu (Frontend)
     │
-    │ UI
+    │ UI (Score Submission Form)
     ▼
-Dikshant
+Dikshant (FastAPI)
     │
-    │ API
+    │ API Route (/api/scores) + Bearer JWT Validation
     ▼
-Mridul
+Mridul (Judging Engine)
     │
-    │ judging.py
+    │ judging.py (Validation, criteria checks, self-judging prevention)
     ▼
-Database
+Database (Supabase PostgreSQL)
 ```
 
 ---
 
 # CURRENT IMPLEMENTATION STATUS
 
-## Already implemented
+## Implemented (Mridul — Judging)
 
 ```text
 backend/app/services/__init__.py
@@ -515,42 +532,42 @@ backend/app/services/test_fixture_judging.py
 fixtures.json
 ```
 
-## Frontend currently being developed
+## Implemented (Sahil — DevOps & Core Infrastructure)
+
+```text
+backend/app/__init__.py
+backend/app/main.py
+backend/app/api/__init__.py
+backend/app/api/dependencies.py
+backend/app/core/__init__.py
+backend/app/core/config.py
+backend/app/core/database.py
+backend/app/core/security.py
+backend/requirements.txt
+backend/Dockerfile
+docker-compose.yml
+docker/postgres/init.sql
+.env.example
+.github/workflows/ci.yml
+```
+
+## Frontend currently being developed (Himanshu)
 
 ```text
 Login
 Gallery
 Dashboard
+Supabase client integration
 ```
 
-## Backend still to be implemented
+## Backend still to be implemented (Dikshant)
 
 ```text
-FastAPI application
-Authentication
-Users
-Events
-Teams
-Submissions
-Judges
-Rubrics API
-Score API integration
-Votes
-Comments
-Results
-Database
-Migrations
-```
-
-## Infrastructure still to be implemented
-
-```text
-Docker
-PostgreSQL
-Docker Compose
-CI/CD
-Environment configuration
-Security infrastructure
+API routes (users, events, teams, submissions, judges, rubrics, scores, votes, comments, results)
+SQLAlchemy models (with UUID user references)
+Pydantic schemas
+Alembic migrations (configured for public schema isolation)
+Integration with judging.py
 ```
 
 ---
