@@ -1,1 +1,10 @@
 
+.env
+*.env
+__pycache__/
+*.pyc
+.venv/
+venv/
+*.db
+node_modules/
+.vscode/
