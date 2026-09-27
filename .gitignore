@@ -4,6 +4,17 @@
 .env.*.local
 *.env
 
+<<<<<<< HEAD
+.env
+*.env
+__pycache__/
+*.pyc
+.venv/
+venv/
+*.db
+node_modules/
+.vscode/
+=======
 # Python
 __pycache__/
 *.py[cod]
@@ -56,3 +67,4 @@ Thumbs.db
 # Docker
 docker-data/
 *.log
+>>>>>>> origin/main
