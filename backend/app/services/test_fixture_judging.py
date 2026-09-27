@@ -1,6 +1,7 @@
 from pathlib import Path
-from fixture_loader import load_fixtures
-from judging import calculate_all_results
+from backend.app.services.fixture_loader import load_fixtures
+from backend.app.services.judging import calculate_all_results
+from backend.app.services.judging import calculate_all_results
 def main():
     project_root = Path(__file__).resolve().parents[3]
     fixture_path = project_root / "fixtures.json"

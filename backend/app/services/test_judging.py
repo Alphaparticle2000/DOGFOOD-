@@ -1,7 +1,7 @@
 from pathlib import Path
-
-from fixture_loader import load_fixtures
-from judging import (
+from backend.app.services.fixture_loader import load_fixtures
+from backend.app.services.judging import calculate_all_results
+from backend.app.services.judging import (
     ScoreInput,
     JudgingError,
     InvalidScoreError,
