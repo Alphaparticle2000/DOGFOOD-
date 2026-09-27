@@ -3,14 +3,16 @@ from pathlib import Path
 from fixture_loader import load_fixtures
 from judging import (
     ScoreInput,
+    JudgingError,
     InvalidScoreError,
     JudgeNotAssignedError,
     DuplicateScoreError,
     SubmissionClosedError,
-    validate_submission_deadline,
     validate_score,
     validate_judge_assignment,
     validate_no_duplicate_score,
+    validate_no_self_judging,
+    validate_submission_deadline,
     calculate_score_average,
     calculate_project_result,
     calculate_all_results,
@@ -32,7 +34,6 @@ def test_valid_score():
         innovation=3,
         comment="Solid.",
     )
-
     validate_score(score)
 
 
@@ -232,6 +233,65 @@ def test_submission_after_deadline():
         "Submission after the deadline was accepted."
     )
 
+
+def test_self_judging_is_blocked():
+ judge = {
+        "id": "jdg_test",
+        "team": "team_test",
+        "tracks": ["track_test"],
+    }
+
+ project = {
+        "id": "prj_test",
+        "team": "team_test",
+        "track": "track_test",
+    }
+ try:
+        validate_no_self_judging(
+            judge,
+            project,
+        )
+ except JudgingError:
+        return
+
+ raise AssertionError(
+        "Self-judging was allowed."
+    )
+
+def test_real_fixture_self_judging():
+    fixtures = load_test_data()
+
+    judge = fixtures["judges"][0]
+    judge_team = judge.get("team")
+
+    if not judge_team:
+        return
+
+    own_project = next(
+        (
+            project
+            for project in fixtures["projects"]
+            if project.get("team") == judge_team
+        ),
+        None,
+    )
+
+    if own_project is None:
+        return
+
+    try:
+        validate_no_self_judging(
+            judge,
+            own_project,
+        )
+    except JudgingError:
+        return
+
+    raise AssertionError(
+        "Real fixture judge was allowed to score their own team's project."
+    )     
+
+
 def run_tests():
     tests = [
         test_valid_score,
@@ -240,12 +300,14 @@ def run_tests():
         test_real_fixture_judge_assignment,
         test_real_fixture_wrong_judge_assignment,
         test_duplicate_score,
-        test_submission_before_deadline,
-        test_submission_after_deadline,
         test_score_average,
         test_real_fixture_project_result,
         test_all_fixture_results,
         test_results_are_sorted,
+        test_submission_before_deadline,
+        test_submission_after_deadline,
+        test_self_judging_is_blocked,
+        test_real_fixture_self_judging,
     ]
 
     passed = 0

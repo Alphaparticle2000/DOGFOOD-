@@ -1,7 +1,7 @@
 from __future__ import annotations
-from datetime import datetime
 
 from dataclasses import dataclass
+from datetime import datetime
 from typing import Any
 
 
@@ -15,6 +15,7 @@ class InvalidScoreError(JudgingError):
 
 class JudgeNotAssignedError(JudgingError):
     """Raised when a judge is not assigned to the project's track."""
+
 
 class SubmissionClosedError(JudgingError):
     """Raised when an action occurs after the submission deadline."""
@@ -91,6 +92,20 @@ def validate_judge_assignment(
         )
 
 
+def validate_no_self_judging(
+    judge: dict[str, Any],
+    project: dict[str, Any],
+) -> None:
+    """
+    Prevent a judge from scoring a project belonging to their own team.
+    """
+
+    if judge.get("team") == project.get("team"):
+        raise JudgingError(
+            "A judge cannot score their own team's project."
+        )
+
+
 def validate_no_duplicate_score(
     existing_scores: list[dict[str, Any]],
     judge_id: str,
@@ -123,6 +138,8 @@ def validate_submission(
 
     validate_judge_assignment(judge, project)
 
+    validate_no_self_judging(judge, project)
+
     validate_no_duplicate_score(
         existing_scores,
         judge_id=judge["id"],
@@ -152,6 +169,8 @@ def validate_submission_deadline(
         raise SubmissionClosedError(
             "Submission was made after the submission deadline."
         )
+
+
 def calculate_score_average(
     scores: list[dict[str, Any]],
 ) -> dict[str, float]:
@@ -240,4 +259,6 @@ def calculate_all_results(
         key=lambda result: result["overall_average"],
         reverse=True,
     )
+
+
 
