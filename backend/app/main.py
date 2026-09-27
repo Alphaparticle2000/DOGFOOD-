@@ -1,16 +1,28 @@
+from contextlib import asynccontextmanager
 from fastapi import FastAPI, Depends, status
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from backend.app.core.config import settings
-from backend.app.core.database import get_db
+from backend.app.core.database import Base, engine, get_db
+from backend.app.api.routes import api_router
+import backend.app.models  # noqa: F401
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Ensure tables exist on startup (useful for dev / test environments)
+    Base.metadata.create_all(bind=engine)
+    yield
+
 
 app = FastAPI(
     title=settings.APP_NAME,
     version="1.0.0",
     docs_url="/docs" if settings.DEBUG else None,
     redoc_url="/redoc" if settings.DEBUG else None,
+    lifespan=lifespan,
 )
 
 # ------------------------------------------------------------------------------
@@ -47,3 +59,7 @@ def health_db_check(db: Session = Depends(get_db)):
             "database": "error",
             "detail": str(e),
         }
+
+
+# Mount application domain routes under /api
+app.include_router(api_router)
