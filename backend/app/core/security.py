@@ -28,15 +28,21 @@ def verify_supabase_token(token: str) -> Optional[Dict[str, Any]]:
 
 def extract_user_role(payload: Dict[str, Any]) -> str:
     """
-    Extracts the user's role from Supabase JWT claims:
-    Checks user_metadata, app_metadata, or the top-level role claim.
+    Extracts the user's role from Supabase JWT claims.
+    Prioritizes app_metadata and user_metadata custom roles.
+    Ignores the generic Supabase internal role 'authenticated'.
+    Defaults to 'participant'.
     """
     user_meta = payload.get("user_metadata") or {}
     app_meta = payload.get("app_metadata") or {}
 
-    return (
-        user_meta.get("role")
-        or app_meta.get("role")
-        or payload.get("role")
-        or "participant"
-    )
+    custom_role = app_meta.get("role") or user_meta.get("role")
+    if custom_role:
+        return custom_role
+
+    top_role = payload.get("role")
+    if top_role and top_role != "authenticated":
+        return top_role
+
+    return "participant"
+

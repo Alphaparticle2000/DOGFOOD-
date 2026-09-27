@@ -48,7 +48,7 @@ services:
     volumes:
       - ./frontend:/app
       - /app/node_modules
-    command: sh -c "npm install && npm run dev -- --host 0.0.0.0"
+    command: sh -c "if [ -f package.json ]; then npm install && npm run dev -- --host 0.0.0.0; else echo 'Frontend package.json not found. Waiting for frontend files...' && tail -f /dev/null; fi"
 
   # ----------------------------------------------------------------------------
   # Local PostgreSQL (Fallback / offline development without cloud Supabase)
