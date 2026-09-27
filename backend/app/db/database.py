@@ -1,6 +1,3 @@
-from sqlalchemy import create_engine
-from sqlalchemy.orm import declarative_base
-from app.core.config import settings
+from backend.app.core.database import Base, engine, SessionLocal, get_db
 
-engine = create_engine(settings.DATABASE_URL)
-Base = declarative_base()
+__all__ = ["Base", "engine", "SessionLocal", "get_db"]

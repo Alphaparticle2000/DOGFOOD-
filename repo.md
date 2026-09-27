@@ -30,10 +30,11 @@ DOGFOOD/
 │   │   │   ├── dependencies.py                         [EXISTING — SAHIL]
 │   │   │   │
 │   │   │   └── routes/
-│   │   │       ├── __init__.py                          [TO CREATE]
-│   │   │       ├── users.py                             [TO CREATE — DIKSHANT]
-│   │   │       ├── events.py                            [TO CREATE — DIKSHANT]
-│   │   │       ├── teams.py                             [TO CREATE — DIKSHANT]
+│   │   │       ├── __init__.py                          [EXISTING — DIKSHANT]
+│   │   │       ├── users.py                             [EXISTING — DIKSHANT]
+│   │   │       ├── events.py                            [EXISTING — DIKSHANT]
+│   │   │       ├── tracks.py                            [EXISTING — DIKSHANT]
+│   │   │       ├── teams.py                             [EXISTING — DIKSHANT]
 │   │   │       ├── submissions.py                       [TO CREATE — DIKSHANT]
 │   │   │       ├── judges.py                            [TO CREATE — DIKSHANT]
 │   │   │       ├── rubrics.py                           [TO CREATE — DIKSHANT]
@@ -49,23 +50,27 @@ DOGFOOD/
 │   │   │   └── security.py                              [EXISTING — SAHIL]
 │   │   │
 │   │   ├── models/
-│   │   │   ├── __init__.py                              [TO CREATE]
-│   │   │   ├── user.py                                  [TO CREATE — DIKSHANT]
-│   │   │   ├── event.py                                 [TO CREATE — DIKSHANT]
-│   │   │   ├── team.py                                  [TO CREATE — DIKSHANT]
-│   │   │   ├── submission.py                            [TO CREATE — DIKSHANT]
-│   │   │   ├── judge.py                                 [TO CREATE — DIKSHANT]
+│   │   │   ├── __init__.py                              [EXISTING — DIKSHANT]
+│   │   │   ├── user.py                                  [EXISTING — DIKSHANT]
+│   │   │   ├── event.py                                 [EXISTING — DIKSHANT]
+│   │   │   ├── track.py                                 [EXISTING — DIKSHANT]
+│   │   │   ├── team.py                                  [EXISTING — DIKSHANT]
+│   │   │   ├── team_member.py                           [EXISTING — DIKSHANT]
+│   │   │   ├── submission.py                            [EXISTING — DIKSHANT]
+│   │   │   ├── judge.py                                 [EXISTING — DIKSHANT]
 │   │   │   ├── rubric.py                                [TO CREATE — DIKSHANT]
-│   │   │   ├── score.py                                 [TO CREATE — DIKSHANT]
-│   │   │   ├── vote.py                                  [TO CREATE — DIKSHANT]
-│   │   │   ├── comment.py                               [TO CREATE — DIKSHANT]
-│   │   │   └── audit_log.py                             [TO CREATE — DIKSHANT]
+│   │   │   ├── score.py                                 [EXISTING — DIKSHANT]
+│   │   │   ├── vote.py                                  [EXISTING — DIKSHANT]
+│   │   │   ├── comment.py                               [EXISTING — DIKSHANT]
+│   │   │   └── audit_log.py                             [EXISTING — DIKSHANT]
 │   │   │
 │   │   ├── schemas/
-│   │   │   ├── __init__.py                              [TO CREATE]
-│   │   │   ├── user.py                                  [TO CREATE — DIKSHANT]
-│   │   │   ├── event.py                                 [TO CREATE — DIKSHANT]
-│   │   │   ├── team.py                                  [TO CREATE — DIKSHANT]
+│   │   │   ├── __init__.py                              [EXISTING — DIKSHANT]
+│   │   │   ├── user.py                                  [EXISTING — DIKSHANT]
+│   │   │   ├── event.py                                 [EXISTING — DIKSHANT]
+│   │   │   ├── track.py                                 [EXISTING — DIKSHANT]
+│   │   │   ├── team.py                                  [EXISTING — DIKSHANT]
+│   │   │   ├── judging.py                               [EXISTING — MRIDUL]
 │   │   │   ├── submission.py                            [TO CREATE — DIKSHANT]
 │   │   │   ├── judge.py                                 [TO CREATE — DIKSHANT]
 │   │   │   ├── rubric.py                                [TO CREATE — DIKSHANT]
@@ -88,20 +93,20 @@ DOGFOOD/
 │   ├── tests/
 │   │   ├── __init__.py                                  [EXISTING — SAHIL]
 │   │   ├── test_health.py                               [EXISTING — SAHIL]
-│   │   ├── test_users.py                                 [TO CREATE]
-│   │   ├── test_events.py                                [TO CREATE]
-│   │   ├── test_teams.py                                 [TO CREATE]
-│   │   ├── test_submissions.py                           [TO CREATE]
-│   │   ├── test_judges.py                                [TO CREATE]
-│   │   ├── test_scores.py                                [TO CREATE]
-│   │   ├── test_votes.py                                 [TO CREATE]
-│   │   └── test_results.py                               [TO CREATE]
+│   │   ├── test_users.py                                [EXISTING — DIKSHANT]
+│   │   ├── test_events.py                               [EXISTING — DIKSHANT]
+│   │   ├── test_teams.py                                [EXISTING — DIKSHANT]
+│   │   ├── test_submissions.py                          [TO CREATE]
+│   │   ├── test_judges.py                               [TO CREATE]
+│   │   ├── test_scores.py                               [TO CREATE]
+│   │   ├── test_votes.py                                [TO CREATE]
+│   │   └── test_results.py                              [TO CREATE]
 │   │
 │   ├── alembic/
-│   │   ├── env.py                                       [TO CREATE — DIKSHANT]
-│   │   ├── script.py.mako                               [TO CREATE — DIKSHANT]
+│   │   ├── env.py                                       [EXISTING — DIKSHANT]
+│   │   ├── script.py.mako                               [EXISTING — DIKSHANT]
 │   │   └── versions/
-│   │       └── ...                                      [TO CREATE — DIKSHANT]
+│   │       └── ...                                      [EXISTING — DIKSHANT]
 │   │
 │   ├── requirements.txt                                  [EXISTING — SAHIL]
 │   ├── Dockerfile                                        [EXISTING — SAHIL]
@@ -561,13 +566,39 @@ Dashboard
 Supabase client integration
 ```
 
+## Implemented (Dikshant — Backend Application Core)
+
+```text
+backend/app/models/user.py (UUID primary key matching Supabase auth.users)
+backend/app/models/event.py
+backend/app/models/track.py
+backend/app/models/team.py
+backend/app/models/team_member.py
+backend/app/models/judge.py
+backend/app/models/submission.py
+backend/app/models/score.py
+backend/app/models/vote.py
+backend/app/models/comment.py
+backend/app/models/audit.py
+backend/app/schemas/user.py
+backend/app/schemas/event.py
+backend/app/schemas/track.py
+backend/app/schemas/team.py
+backend/app/api/routes/users.py (/api/users/me profile sync)
+backend/app/api/routes/events.py (Events & Tracks CRUD + RBAC)
+backend/app/api/routes/tracks.py (Tracks CRUD + RBAC)
+backend/app/api/routes/teams.py (Teams & Team Members CRUD + Lead RBAC)
+backend/alembic/env.py (configured for public schema isolation)
+backend/alembic/versions/0ec25862acc1_initial_schema.py
+backend/tests/test_users.py
+backend/tests/test_events.py
+backend/tests/test_teams.py
+```
+
 ## Backend still to be implemented (Dikshant)
 
 ```text
-API routes (users, events, teams, submissions, judges, rubrics, scores, votes, comments, results)
-SQLAlchemy models (with UUID user references)
-Pydantic schemas
-Alembic migrations (configured for public schema isolation)
+API routes (submissions, judges, rubrics, scores, votes, comments, results)
 Integration with judging.py
 ```
 
