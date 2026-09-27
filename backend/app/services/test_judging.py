@@ -12,6 +12,7 @@ from judging import (
     validate_judge_assignment,
     validate_no_duplicate_score,
     validate_no_self_judging,
+    validate_submission,
     validate_submission_deadline,
     calculate_score_average,
     calculate_project_result,
@@ -235,28 +236,30 @@ def test_submission_after_deadline():
 
 
 def test_self_judging_is_blocked():
- judge = {
+    judge = {
         "id": "jdg_test",
         "team": "team_test",
         "tracks": ["track_test"],
     }
 
- project = {
+    project = {
         "id": "prj_test",
         "team": "team_test",
         "track": "track_test",
     }
- try:
+
+    try:
         validate_no_self_judging(
             judge,
             project,
         )
- except JudgingError:
+    except JudgingError:
         return
 
- raise AssertionError(
+    raise AssertionError(
         "Self-judging was allowed."
     )
+
 
 def test_real_fixture_self_judging():
     fixtures = load_test_data()
@@ -288,8 +291,43 @@ def test_real_fixture_self_judging():
         return
 
     raise AssertionError(
-        "Real fixture judge was allowed to score their own team's project."
-    )     
+        "Real fixture judge was allowed to score "
+        "their own team's project."
+    )
+
+
+def test_validate_submission_blocks_self_judging():
+    judge = {
+        "id": "jdg_test",
+        "team": "team_test",
+        "tracks": ["track_test"],
+    }
+
+    project = {
+        "id": "prj_test",
+        "team": "team_test",
+        "track": "track_test",
+    }
+
+    score = ScoreInput(
+        functionality=5,
+        quality=5,
+        innovation=5,
+    )
+
+    try:
+        validate_submission(
+            judge=judge,
+            project=project,
+            score=score,
+            existing_scores=[],
+        )
+    except JudgingError:
+        return
+
+    raise AssertionError(
+        "validate_submission allowed self-judging."
+    )
 
 
 def run_tests():
@@ -308,6 +346,7 @@ def run_tests():
         test_submission_after_deadline,
         test_self_judging_is_blocked,
         test_real_fixture_self_judging,
+        test_validate_submission_blocks_self_judging,
     ]
 
     passed = 0
