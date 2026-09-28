@@ -1,3 +1,4 @@
+import uuid
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -7,6 +8,7 @@ from backend.app.api.dependencies import require_role, get_current_user
 from backend.app.core.database import get_db
 from backend.app.models.submission import Submission
 from backend.app.models.team import Team
+from backend.app.models.team_member import TeamMember
 from backend.app.models.event import Event
 from backend.app.schemas.submission import SubmissionCreate, SubmissionResponse, SubmissionUpdate
 
@@ -34,6 +36,23 @@ def _check_deadline(event: Optional[Event]):
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Submission deadline has passed for this event.",
             )
+
+
+def _ensure_team_member_or_staff(db: Session, team_id: int, current_user: Dict[str, Any]):
+    """Allow organizers/admins, or members of the team. Everyone else gets 403."""
+    if current_user.get("role", "participant") in ("admin", "organizer"):
+        return
+    user_uuid = uuid.UUID(str(current_user["id"]))
+    membership = (
+        db.query(TeamMember)
+        .filter(TeamMember.team_id == team_id, TeamMember.user_id == user_uuid)
+        .first()
+    )
+    if not membership:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only members of this team can create or edit its submissions.",
+        )
 
 
 @router.get("", response_model=List[SubmissionResponse])
@@ -69,8 +88,9 @@ def create_submission(
     current_user: Dict[str, Any] = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """Create a submission — blocked once the event's submission deadline has passed."""
+    """Create a submission (team members or staff only), blocked after the event deadline."""
     team, event = _get_team_and_event(db, submission_in.team_id)
+    _ensure_team_member_or_staff(db, team.id, current_user)
     _check_deadline(event)
 
     submission = Submission(**submission_in.model_dump())
@@ -87,13 +107,15 @@ def update_submission(
     current_user: Dict[str, Any] = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """Update a submission — blocked if locked or past deadline."""
+    """Update a submission (team members or staff only), blocked if locked or past deadline."""
     submission = db.query(Submission).filter(Submission.id == submission_id).first()
     if not submission:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Submission with ID {submission_id} not found",
         )
+
+    _ensure_team_member_or_staff(db, submission.team_id, current_user)
 
     if submission.is_locked:
         raise HTTPException(
