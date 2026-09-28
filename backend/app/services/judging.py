@@ -7,27 +7,27 @@ from typing import Any, Mapping, Sequence
 
 
 class JudgingError(Exception):
-    pass
+    """Base judging exception."""
 
 
 class InvalidScoreError(JudgingError):
-    pass
+    """Invalid score."""
 
 
 class InvalidRubricError(JudgingError):
-    pass
+    """Invalid rubric."""
 
 
 class JudgeNotAssignedError(JudgingError):
-    pass
+    """Judge is not assigned."""
 
 
 class SubmissionClosedError(JudgingError):
-    pass
+    """Submission deadline passed."""
 
 
 class DuplicateScoreError(JudgingError):
-    pass
+    """Duplicate score."""
 
 
 @dataclass(frozen=True)
@@ -59,27 +59,26 @@ def validate_score(score: ScoreInput) -> None:
         value = getattr(score, criterion)
 
         if not isinstance(value, int):
-            raise InvalidScoreError(f"{criterion} must be an integer.")
+            raise InvalidScoreError(
+                f"{criterion} must be an integer."
+            )
 
         if not MIN_SCORE <= value <= MAX_SCORE:
             raise InvalidScoreError(
-                f"{criterion} must be between {MIN_SCORE} and {MAX_SCORE}."
+                f"{criterion} must be between "
+                f"{MIN_SCORE} and {MAX_SCORE}."
             )
 
 
 def validate_rubric_weights(
     weights: Mapping[str, float],
 ) -> dict[str, float]:
-    missing = [
-        criterion
-        for criterion in CRITERIA
-        if criterion not in weights
-    ]
 
-    if missing:
-        raise InvalidRubricError(
-            f"Missing rubric criteria: {', '.join(missing)}."
-        )
+    for criterion in CRITERIA:
+        if criterion not in weights:
+            raise InvalidRubricError(
+                f"Missing criterion: {criterion}"
+            )
 
     cleaned = {}
 
@@ -88,7 +87,7 @@ def validate_rubric_weights(
             value = float(weights[criterion])
         except (TypeError, ValueError):
             raise InvalidRubricError(
-                f"{criterion} weight must be a number."
+                f"{criterion} weight must be numeric."
             )
 
         if value < 0:
@@ -102,14 +101,14 @@ def validate_rubric_weights(
 
     if abs(total - 1.0) > 1e-6:
         raise InvalidRubricError(
-            f"Rubric weights must sum to 1.0; received {total:.6f}."
+            "Rubric weights must sum to 1.0."
         )
 
     return cleaned
 
 
 def calculate_weighted_score(
-    criteria: Mapping[str, float | int],
+    criteria: Mapping[str, int | float],
     weights: Mapping[str, float] | None = None,
 ) -> float:
 
@@ -118,27 +117,24 @@ def calculate_weighted_score(
     )
 
     for criterion in CRITERIA:
+
         if criterion not in criteria:
             raise InvalidScoreError(
-                f"Missing score criteria: {criterion}."
+                f"Missing criterion: {criterion}"
             )
 
-        value = criteria[criterion]
-
-        if not isinstance(value, (int, float)):
-            raise InvalidScoreError(
-                f"{criterion} must be numeric."
-            )
+        value = float(criteria[criterion])
 
         if not MIN_SCORE <= value <= MAX_SCORE:
             raise InvalidScoreError(
-                f"{criterion} must be between {MIN_SCORE} and {MAX_SCORE}."
+                f"{criterion} must be between 1 and 5."
             )
 
     return round(
         sum(
-            float(criteria[c]) * rubric[c]
-            for c in CRITERIA
+            float(criteria[criterion])
+            * rubric[criterion]
+            for criterion in CRITERIA
         ),
         2,
     )
@@ -149,7 +145,10 @@ def judge_can_score_project(
     project: dict[str, Any],
 ) -> bool:
 
-    judge_tracks = set(judge.get("tracks", []))
+    judge_tracks = set(
+        judge.get("tracks", [])
+    )
+
     project_track = project.get("track")
 
     return project_track in judge_tracks
@@ -160,10 +159,13 @@ def validate_judge_assignment(
     project: dict[str, Any],
 ) -> None:
 
-    if not judge_can_score_project(judge, project):
+    if not judge_can_score_project(
+        judge,
+        project,
+    ):
         raise JudgeNotAssignedError(
-            f"Judge {judge.get('id')} is not assigned to "
-            f"track {project.get('track')}."
+            f"Judge {judge.get('id')} is not assigned "
+            f"to track {project.get('track')}."
         )
 
 
@@ -185,6 +187,7 @@ def validate_no_duplicate_score(
 ) -> None:
 
     for score in existing_scores:
+
         if (
             score.get("judge") == judge_id
             and score.get("project") == project_id
@@ -202,8 +205,15 @@ def validate_submission(
     existing_scores: list[dict[str, Any]],
 ) -> None:
 
-    validate_judge_assignment(judge, project)
-    validate_no_self_judging(judge, project)
+    validate_judge_assignment(
+        judge,
+        project,
+    )
+
+    validate_no_self_judging(
+        judge,
+        project,
+    )
 
     validate_no_duplicate_score(
         existing_scores,
@@ -220,11 +230,17 @@ def validate_submission_deadline(
 ) -> None:
 
     deadline = datetime.fromisoformat(
-        event["submissions_close"].replace("Z", "+00:00")
+        event["submissions_close"].replace(
+            "Z",
+            "+00:00",
+        )
     )
 
     submission_time = datetime.fromisoformat(
-        submitted_at.replace("Z", "+00:00")
+        submitted_at.replace(
+            "Z",
+            "+00:00",
+        )
     )
 
     if submission_time > deadline:
@@ -244,17 +260,23 @@ def calculate_score_average(
         }
 
     totals = {
-        criterion: 0
+        criterion: 0.0
         for criterion in CRITERIA
     }
 
     for score in scores:
-        criteria = score.get("criteria", {})
+
+        criteria = score.get(
+            "criteria",
+            {},
+        )
 
         for criterion in CRITERIA:
-            totals[criterion] += criteria.get(
-                criterion,
-                0,
+            totals[criterion] += float(
+                criteria.get(
+                    criterion,
+                    0,
+                )
             )
 
     count = len(scores)
@@ -329,6 +351,7 @@ def calculate_all_results(
 
 
 def _mean(values: Sequence[float]) -> float:
+
     return (
         sum(values) / len(values)
         if values
@@ -336,7 +359,7 @@ def _mean(values: Sequence[float]) -> float:
     )
 
 
-def _population_stddev(
+def _stddev(
     values: Sequence[float],
     mean: float,
 ) -> float:
@@ -354,9 +377,6 @@ def _population_stddev(
 
 def normalize_judge_scores(
     scores: list[dict[str, Any]],
-    *,
-    output_mean: float = 3.0,
-    output_stddev: float = 1.0,
 ) -> list[dict[str, Any]]:
 
     if not scores:
@@ -364,68 +384,88 @@ def normalize_judge_scores(
 
     grouped: dict[str, list[float]] = {}
 
+    raw_scores = []
+
     for score in scores:
 
-        judge_id = str(score["judge"])
+        criteria = score.get(
+            "criteria",
+            {},
+        )
 
-        weighted = calculate_weighted_score(
-            score.get("criteria", {}),
-            score.get("weights"),
+        weights = score.get(
+            "weights",
+            DEFAULT_WEIGHTS,
+        )
+
+        raw = calculate_weighted_score(
+            criteria,
+            weights,
+        )
+
+        judge_id = str(
+            score["judge"]
         )
 
         grouped.setdefault(
             judge_id,
             [],
-        ).append(weighted)
+        ).append(raw)
 
-    normalized = []
-
-    for score in scores:
-
-        judge_id = str(score["judge"])
-
-        raw = calculate_weighted_score(
-            score.get("criteria", {}),
-            score.get("weights"),
+        raw_scores.append(
+            (
+                score,
+                judge_id,
+                raw,
+            )
         )
+
+    output = []
+
+    for score, judge_id, raw in raw_scores:
 
         values = grouped[judge_id]
 
         mean = _mean(values)
-        stddev = _population_stddev(
+
+        stddev = _stddev(
             values,
             mean,
         )
 
         if stddev == 0:
-            normalized_score = output_mean
+            normalized = 3.0
         else:
-            z_score = (raw - mean) / stddev
-
-            normalized_score = (
-                output_mean
-                + z_score * output_stddev
+            z = (
+                (raw - mean)
+                / stddev
             )
 
-        normalized_score = round(
-            max(
-                float(MIN_SCORE),
-                min(
-                    float(MAX_SCORE),
-                    normalized_score,
-                ),
+            normalized = (
+                3.0
+                + z
+            )
+
+        normalized = max(
+            1.0,
+            min(
+                5.0,
+                normalized,
             ),
-            2,
         )
 
-        normalized.append(
+        output.append(
             {
                 **score,
-                "raw_weighted_score": raw,
-                "judge_mean": round(mean, 2),
-                "judge_stddev": round(stddev, 2),
-                "normalized_score": normalized_score,
+                "raw_weighted_score": round(
+                    raw,
+                    2,
+                ),
+                "normalized_score": round(
+                    normalized,
+                    2,
+                ),
             }
         )
 
-    return normalized
+    return output

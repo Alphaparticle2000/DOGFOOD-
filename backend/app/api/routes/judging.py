@@ -2,8 +2,13 @@ from typing import Any, Dict
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session\
 
+from backend.app.api.dependencies import (
+    get_current_user,
+    require_role,
+)
+from backend.app.models.rubric import Rubric
 from backend.app.api.dependencies import get_current_user
 from backend.app.core.database import get_db
 from backend.app.models.judge import Judge
@@ -191,4 +196,270 @@ def score_submission(
             "innovation": score.innovation,
         },
         comment=score.comment or "",
+    ) 
+import csv
+import io
+
+from fastapi.responses import StreamingResponse
+
+from backend.app.models.rubric import Rubric
+from backend.app.services.judging import (
+    DEFAULT_WEIGHTS,
+    calculate_weighted_score,
+    normalize_judge_scores,
+)
+
+@router.get(
+    "/events/{event_id}/results",
+)
+def get_judging_results(
+    event_id: int,
+    current_user: Dict[str, Any] = Depends(
+        require_role(["organizer", "admin", "judge"])
+    ),
+    db: Session = Depends(get_db),
+):
+
+    submissions = (
+        db.query(Submission)
+        .join(Submission.team)
+        .filter(
+            Submission.is_locked.is_(True),
+            Submission.team.has(
+                event_id=event_id
+            ),
+        )
+        .all()
+    )
+
+    results = []
+
+    for submission in submissions:
+
+        scores = (
+            db.query(Score)
+            .filter(
+                Score.submission_id
+                == submission.id
+            )
+            .all()
+        )
+
+        rubric = (
+            db.query(Rubric)
+            .filter(
+                Rubric.event_id == event_id,
+                Rubric.is_active.is_(True),
+                (
+                    Rubric.track_id
+                    == submission.team.track_id
+                )
+                | Rubric.track_id.is_(None),
+            )
+            .order_by(
+                Rubric.track_id.desc()
+            )
+            .first()
+        )
+
+        weights = (
+            rubric.criteria_weights
+            if rubric
+            else DEFAULT_WEIGHTS
+        )
+
+        if not scores:
+            results.append(
+                {
+                    "submission_id": submission.id,
+                    "title": submission.title,
+                    "judge_count": 0,
+                    "weighted_average": 0.0,
+                    "normalized_average": 0.0,
+                }
+            )
+            continue
+
+        score_dicts = []
+
+        for score in scores:
+
+            criteria = {
+                "functionality": score.functionality,
+                "quality": score.quality,
+                "innovation": score.innovation,
+            }
+
+            score_dicts.append(
+                {
+                    "id": score.id,
+                    "judge": str(score.judge_id),
+                    "project": str(submission.id),
+                    "criteria": criteria,
+                    "weights": weights,
+                    "comment": score.comment or "",
+                }
+            )
+
+        normalized = normalize_judge_scores(
+            score_dicts
+        )
+
+        weighted_average = round(
+            sum(
+                item["raw_weighted_score"]
+                for item in normalized
+            )
+            / len(normalized),
+            2,
+        )
+
+        normalized_average = round(
+            sum(
+                item["normalized_score"]
+                for item in normalized
+            )
+            / len(normalized),
+            2,
+        )
+
+        results.append(
+            {
+                "submission_id": submission.id,
+                "title": submission.title,
+                "judge_count": len(scores),
+                "weighted_average": weighted_average,
+                "normalized_average": normalized_average,
+            }
+        )
+
+    results.sort(
+        key=lambda x: x["normalized_average"],
+        reverse=True,
+    )
+
+    for index, result in enumerate(
+        results,
+        start=1,
+    ):
+        result["rank"] = index
+
+    return {
+        "event_id": event_id,
+        "results": results,
+    }
+
+
+@router.get(
+    "/events/{event_id}/export.csv",
+)
+def export_judging_csv(
+    event_id: int,
+    current_user: Dict[str, Any] = Depends(
+        require_role(["organizer", "admin"])
+    ),
+    db: Session = Depends(get_db),
+):
+
+    submissions = (
+        db.query(Submission)
+        .join(Submission.team)
+        .filter(
+            Submission.is_locked.is_(True),
+            Submission.team.has(
+                event_id=event_id
+            ),
+        )
+        .all()
+    )
+
+    output = io.StringIO()
+
+    writer = csv.writer(output)
+
+    writer.writerow(
+        [
+            "submission_id",
+            "title",
+            "judge_id",
+            "functionality",
+            "quality",
+            "innovation",
+            "weighted_score",
+            "comment",
+            "created_at",
+        ]
+    )
+
+    for submission in submissions:
+
+        scores = (
+            db.query(Score)
+            .filter(
+                Score.submission_id
+                == submission.id
+            )
+            .all()
+        )
+
+        rubric = (
+            db.query(Rubric)
+            .filter(
+                Rubric.event_id == event_id,
+                Rubric.is_active.is_(True),
+                (
+                    Rubric.track_id
+                    == submission.team.track_id
+                )
+                | Rubric.track_id.is_(None),
+            )
+            .order_by(
+                Rubric.track_id.desc()
+            )
+            .first()
+        )
+
+        weights = (
+            rubric.criteria_weights
+            if rubric
+            else DEFAULT_WEIGHTS
+        )
+
+        for score in scores:
+
+            criteria = {
+                "functionality": score.functionality,
+                "quality": score.quality,
+                "innovation": score.innovation,
+            }
+
+            weighted = calculate_weighted_score(
+                criteria,
+                weights,
+            )
+
+            writer.writerow(
+                [
+                    submission.id,
+                    submission.title,
+                    str(score.judge_id),
+                    score.functionality,
+                    score.quality,
+                    score.innovation,
+                    weighted,
+                    score.comment or "",
+                    score.created_at,
+                ]
+            )
+
+    output.seek(0)
+
+    return StreamingResponse(
+        iter([output.getvalue()]),
+        media_type="text/csv",
+        headers={
+            "Content-Disposition": (
+                f"attachment; filename=event_{event_id}_judging.csv"
+            )
+        },
     )
