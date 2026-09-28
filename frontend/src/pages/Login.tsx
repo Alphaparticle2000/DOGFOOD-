@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import { useAuth } from "../context/AuthContext";
 import { Code2, Mail, LockKeyhole } from "lucide-react";
 
 const Login = () => {
@@ -6,6 +7,14 @@ const Login = () => {
   const [email, setEmail] = useState("");
 
   const [password, setPassword] = useState("");
+
+  const { login } = useAuth();
+  console.log(login);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    login(email);
+  };
 
   return (
     <>
@@ -19,7 +28,7 @@ const Login = () => {
             </div>
 
             <span className="text-2xl font-bold tracking-wide">
-              DOGFOOD
+              Hackathon RAPTX
             </span>
           </div>
 
@@ -41,7 +50,7 @@ const Login = () => {
           </div>
 
           <div className="mt-12 text-sm text-gray-500">
-            DOGFOOD 2026
+            HACKATHON RAPTZ 2026
           </div>
 
         </div>
@@ -56,10 +65,11 @@ const Login = () => {
               </h2>
 
               <p className="mt-2 text-sm text-gray-400">
-                Sign in to continue to DOGFOOD
+                Sign in to continue to HACKATHON RAPTZ
               </p>
             </div>
 
+            <form onSubmit={handleSubmit}>
             <div className="mb-5">
 
               <label className="mb-2 block text-sm text-gray-300">
@@ -109,17 +119,17 @@ const Login = () => {
               </div>
 
             </div>
+              <button
+                type='submit'
+                className="w-full rounded-xl bg-linear-to-r from-purple-500 to-blue-500 py-3 font-semibold transition hover:opacity-90"
+              >
+                Sign In
+              </button>
 
-            <button
-              className="w-full rounded-xl bg-linear-to-r from-purple-500 to-blue-500 py-3 font-semibold transition hover:opacity-90"
-            >
-              Sign In
-            </button>
-
-            <p className="mt-6 text-center text-xs text-gray-500">
-              Secure access to your DOGFOOD workspace
-            </p>
-
+              <p className="mt-6 text-center text-xs text-gray-500">
+                Secure access to your HACKATHON RAPTZ workspace
+              </p>
+            </form>
           </div>
 
         </div>
