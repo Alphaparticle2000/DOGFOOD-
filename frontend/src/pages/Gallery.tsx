@@ -1,4 +1,3 @@
-import React from 'react'
 import projects from '../data/fixtures.json'
 import Projectcard from '../components/Projectcard'
 
