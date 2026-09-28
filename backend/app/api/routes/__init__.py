@@ -8,7 +8,8 @@ from backend.app.api.routes.judging import router as judging_router
 from backend.app.api.routes.judges import router as judges_router
 from backend.app.api.routes.rubrics import router as rubrics_router
 
-api_router = APIRouter(prefix="/api")
+
+api_router = APIRouter()
 
 api_router.include_router(users_router)
 api_router.include_router(events_router)
@@ -17,5 +18,3 @@ api_router.include_router(teams_router)
 api_router.include_router(judging_router)
 api_router.include_router(judges_router)
 api_router.include_router(rubrics_router)
-
-__all__ = ["api_router"]
