@@ -1,4 +1,4 @@
-type SubmissionStatus = "Pending" | "Submitted" 
+type SubmissionStatus = "Draft" | "Submitted" | "Cancelled" 
 
 export interface Submission{
     id: string;
