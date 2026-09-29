@@ -1,37 +1,74 @@
+import { Bell, ChevronDown, LogOut, Menu, Search } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 
-export default function Navbar() {
+type NavbarProps = {
+  onMenuClick: () => void;
+};
+
+export default function Navbar({ onMenuClick }: NavbarProps) {
   const { user, logout } = useAuth();
 
+  const initial = (user?.name?.trim()?.[0] ?? "U").toUpperCase();
+
   return (
-    <header className="sticky top-0 z-40 border-b border-white/10 bg-[#080B14]/95 backdrop-blur">
-      <div className="flex h-16 items-center justify-between px-6">
-        <Link
-          to="/dashboard"
-          className="text-lg font-bold tracking-wide"
+    <header className="topbar">
+      <div className="topbar-left">
+        <button
+          className="mobile-menu"
+          aria-label="Open navigation"
+          onClick={onMenuClick}
         >
-          DOGFOOD
+          <Menu size={17} />
+        </button>
+
+        <Link to="/dashboard" className="mobile-brand">
+          <span className="brand-mark">D</span>
+          <span>DOGFOOD</span>
         </Link>
 
-        <div className="flex items-center gap-4">
-          <div className="hidden text-right sm:block">
-            <p className="text-sm font-medium">
-              {user?.name ?? "User"}
-            </p>
+        <label className="global-search">
+          <Search size={16} aria-hidden="true" />
 
-            <p className="text-xs capitalize text-gray-500">
-              {user?.role ?? "participant"}
-            </p>
-          </div>
+          <input
+            aria-label="Search projects and teams"
+            placeholder="Search projects, teams…"
+          />
 
-          <button
-            onClick={logout}
-            className="rounded-lg border border-white/10 px-3 py-2 text-sm text-gray-300 transition hover:bg-white/5 hover:text-white"
-          >
-            Logout
-          </button>
-        </div>
+          <span className="search-shortcut">⌘ K</span>
+        </label>
+      </div>
+
+      <div className="topbar-right">
+        <button
+          className="icon-btn"
+          aria-label="Notifications"
+          style={{ position: "relative" }}
+        >
+          <Bell size={17} />
+          <span className="notify-dot" />
+        </button>
+
+        <button
+          className="profile-trigger"
+          type="button"
+          onClick={logout}
+          title="Sign out"
+        >
+          <span className="avatar">{initial}</span>
+
+          <span className="profile-copy">
+            <strong>{user?.name ?? "User"}</strong>
+            <small>{user?.role ?? "participant"}</small>
+          </span>
+
+          <ChevronDown size={14} />
+
+          <LogOut
+            size={14}
+            style={{ display: "none" }}
+          />
+        </button>
       </div>
     </header>
   );
