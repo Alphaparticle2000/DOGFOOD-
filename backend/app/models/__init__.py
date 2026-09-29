@@ -21,7 +21,6 @@ __all__ = [
     "Judge",
     "Submission",
     "Score",
-        "Score",
     "Rubric",
     "Vote",
     "Comment",
