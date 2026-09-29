@@ -1,0 +1,99 @@
+services:
+  # ----------------------------------------------------------------------------
+  # FastAPI Application Backend (Dikshant / Mridul / Sahil)
+  # Built from backend/Dockerfile. CMD is overridden with --reload for local dev;
+  # the image's own CMD runs the production command (no reload) on Render.
+  # ----------------------------------------------------------------------------
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: dogfood-backend
+    restart: unless-stopped
+    ports:
+      - "${BACKEND_PORT:-8000}:8000"
+    env_file:
+      - .env
+    environment:
+      - APP_ENV=${APP_ENV:-development}
+      - DEBUG=${DEBUG:-True}
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
+      - SUPABASE_JWT_SECRET=${SUPABASE_JWT_SECRET}
+      - DATABASE_URL=${DATABASE_URL:-postgresql+psycopg2://postgres:postgres@postgres:5432/dogfood}
+      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-http://localhost:5173,http://localhost:8080}
+    command: ["uvicorn", "backend.app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+    volumes:
+      - ./backend:/app/backend
+      - ./fixtures.json:/app/fixtures.json:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+        required: false
+
+  # ----------------------------------------------------------------------------
+  # React + Vite Frontend (Himanshu) — production image, node build + nginx
+  # Vite inlines import.meta.env at build time, so VITE_* values are passed as
+  # build args. Changing them requires `docker compose build frontend`.
+  # ----------------------------------------------------------------------------
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_SUPABASE_URL: ${VITE_SUPABASE_URL:-${SUPABASE_URL}}
+        VITE_SUPABASE_ANON_KEY: ${VITE_SUPABASE_ANON_KEY:-${SUPABASE_ANON_KEY}}
+        VITE_API_URL: ${VITE_API_URL:-http://localhost:8000/api}
+    container_name: dogfood-frontend
+    restart: unless-stopped
+    ports:
+      - "${FRONTEND_PORT:-8080}:8080"
+    environment:
+      PORT: 8080
+
+  # ----------------------------------------------------------------------------
+  # Hot-reload frontend for development (Vite dev server + HMR)
+  #   docker compose --profile dev up frontend-dev
+  # ----------------------------------------------------------------------------
+  frontend-dev:
+    profiles: ["dev"]
+    image: node:22-alpine
+    container_name: dogfood-frontend-dev
+    working_dir: /app
+    restart: unless-stopped
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_SUPABASE_URL=${VITE_SUPABASE_URL:-${SUPABASE_URL}}
+      - VITE_SUPABASE_ANON_KEY=${VITE_SUPABASE_ANON_KEY:-${SUPABASE_ANON_KEY}}
+      - VITE_API_URL=${VITE_API_URL:-http://localhost:8000/api}
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0"
+
+  # ----------------------------------------------------------------------------
+  # Local PostgreSQL (Fallback / offline development without cloud Supabase)
+  # ----------------------------------------------------------------------------
+  postgres:
+    image: postgres:16-alpine
+    container_name: dogfood-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-dogfood}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-dogfood}" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  pgdata:

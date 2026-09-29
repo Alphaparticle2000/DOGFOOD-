@@ -1,0 +1,41 @@
+# ==============================================================================
+# Docker build context exclusions
+# Keeps images small and, critically, stops .env / node_modules from being
+# baked into an image that gets pushed to a registry.
+# ==============================================================================
+
+# Secrets — never let these into a build context
+.env
+.env.*
+*.env
+*.pem
+*.key
+
+# Version control / CI
+.git
+.gitignore
+.github
+.pytest_cache
+
+# Python artefacts
+**/__pycache__/
+**/*.py[cod]
+**/*.egg-info/
+.venv
+venv/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Node artefacts (host node_modules must never win over the image's npm ci)
+**/node_modules/
+frontend/dist/
+frontend/dist-ssr/
+npm-debug.log*
+
+# Local-only data / docs not needed at runtime
+docker-data/
+*.log
+docs/
+repo.md
+README.md
