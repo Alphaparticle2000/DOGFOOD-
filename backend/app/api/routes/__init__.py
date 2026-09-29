@@ -7,6 +7,7 @@ from backend.app.api.routes.teams import router as teams_router
 from backend.app.api.routes.judging import router as judging_router
 from backend.app.api.routes.judges import router as judges_router
 from backend.app.api.routes.rubrics import router as rubrics_router
+from backend.app.api.routes.votes import router as votes_router
 
 
 api_router = APIRouter()
@@ -18,3 +19,4 @@ api_router.include_router(teams_router)
 api_router.include_router(judging_router)
 api_router.include_router(judges_router)
 api_router.include_router(rubrics_router)
+api_router.include_router(votes_router)
