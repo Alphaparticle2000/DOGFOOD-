@@ -1,54 +1,64 @@
-import { createContext, useContext, useState } from "react";
-import type { User } from "../types/auth";
+import {
+  createContext,
+  useState,
+  type ReactNode,
+} from "react";
 
-interface AuthContextType {
+type User = {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+};
+
+type AuthContextType = {
   user: User | null;
-  login: (email: string) => void;
+  isAuthenticated: boolean;
+  loading: boolean;
+  login: (user: User) => void;
   logout: () => void;
-}
+};
 
-const authcontext = createContext<AuthContextType | undefined>(undefined);
+export const AuthContext =
+  createContext<AuthContextType | null>(null);
 
-const AuthProvider = ({ children }: { children: React.ReactNode }) => {
+type AuthProviderProps = {
+  children: ReactNode;
+};
 
+export function AuthProvider({
+  children,
+}: AuthProviderProps) {
   const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(false);
 
-  const login = () => {
-    const mockUser: User = {
-      id: "user_01",
-      name: "Himanshu",
-      email: "himanshu@example.com",
-      role: "participant",
-    };
+  const login = (userData: User) => {
+    setLoading(true);
 
-    setUser(mockUser);
+    setUser(userData);
+
+    setLoading(false);
   };
 
   const logout = () => {
+    setLoading(true);
+
     setUser(null);
+
+    setLoading(false);
   };
 
   return (
-    <authcontext.Provider
+    <AuthContext.Provider
       value={{
         user,
+        isAuthenticated: user !== null,
+        loading,
         login,
         logout,
       }}
     >
       {children}
-    </authcontext.Provider>
+    </AuthContext.Provider>
   );
-};
-
-export const useAuth = () => {
-  const context = useContext(authcontext);
-
-  if (!context) {
-    throw new Error("useAuth must be used inside AuthProvider");
-  }
-
-  return context;
-};
-
-export default AuthProvider;
+}

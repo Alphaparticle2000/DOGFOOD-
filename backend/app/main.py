@@ -12,14 +12,8 @@ import backend.app.models  # noqa: F401
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Ensure tables exist on startup (useful for dev / test environments).
-    # Wrapped in try/except so a database that is unreachable at boot does not
-    # prevent the process from starting: /health keeps answering (so the
-    # platform health check passes) and /health/db reports the real reason.
-    try:
-        Base.metadata.create_all(bind=engine)
-    except Exception as exc:  # pragma: no cover - startup resilience path
-        print(f"[startup] WARNING: could not create tables: {exc}", flush=True)
+    # Ensure tables exist on startup (useful for dev / test environments)
+    Base.metadata.create_all(bind=engine)
     yield
 
 

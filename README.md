@@ -1,4 +1,4 @@
-# DOGFOOD — Hackathon Management Platform
+# DOGFOOD ΓÇö Hackathon Management Platform
 
 A high-performance hackathon management platform built with **FastAPI**, **Supabase**, and **React + Vite**.
 
@@ -85,7 +85,7 @@ The services above are **live**. They were created with `render_deploy.sh`
 `supremesahil/dogfood-backend:latest` and `supremesahil/dogfood-frontend:latest`.
 Render assigned **suffixed** subdomains (the base `dogfood-backend` /
 `dogfood-frontend` names were already taken), so the URLs above are the real
-ones — do not assume `…onrender.com` without the suffix.
+ones ΓÇö do not assume `ΓÇªonrender.com` without the suffix.
 
 > Secrets (`DATABASE_URL`, `SUPABASE_*`, `VITE_SUPABASE_*`) are injected as
 > Render env vars per service, not baked into the images. The backend's
@@ -95,12 +95,12 @@ ones — do not assume `…onrender.com` without the suffix.
 ### First-time deploy (Blueprint alternative)
 
 1. Push `render.yaml` to `main`.
-2. In Render: **Blueprints → New Blueprint Instance**, select this repo.
+2. In Render: **Blueprints ΓåÆ New Blueprint Instance**, select this repo.
 3. Render creates both services and builds them. Fill in the secrets that are
    marked `sync: false` (they are intentionally not stored in git):
-   * backend — `SUPABASE_URL`, `SUPABASE_ANON_KEY`,
+   * backend ΓÇö `SUPABASE_URL`, `SUPABASE_ANON_KEY`,
      `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_JWT_SECRET`, `DATABASE_URL`
-   * frontend — `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`
+   * frontend ΓÇö `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`
 4. `ALLOWED_ORIGINS` (backend) and `VITE_API_URL` (frontend) are wired
    automatically via `fromService`, so CORS resolves without hard-coded hosts.
 

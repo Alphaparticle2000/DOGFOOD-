@@ -1,71 +1,75 @@
-import { useState } from 'react'
-import { Menu, X } from 'lucide-react'
-import { NavLink } from 'react-router-dom'
+import { Bell, ChevronDown, LogOut, Menu, Search } from "lucide-react";
+import { Link } from "react-router-dom";
+import { useAuth } from "../hooks/useAuth";
 
-const Navbar = () => {
-  const [isOpen, setIsOpen] = useState(false)
+type NavbarProps = {
+  onMenuClick: () => void;
+};
+
+export default function Navbar({ onMenuClick }: NavbarProps) {
+  const { user, logout } = useAuth();
+
+  const initial = (user?.name?.trim()?.[0] ?? "U").toUpperCase();
 
   return (
-    <div className='w-full max-w-5xl mx-auto rounded-xl border border-gray-600 bg-[#0E1428]'>
-        <div className='bg-[#0E1428] text-white flex items-center justify-between rounded-xl border border-gray-600 px-4 py-3 shadow-lg'>
-          <h1 className='font-extrabold text-green-400'>HACKATHON RAPTX</h1>
-          <div className='hidden md:flex justify-center gap-3'>
-            <NavLink to='/myteam' className='p-3 hover:text-gray-300 transition'>
-              My Team
-            </NavLink>
-            <NavLink to='/gallery' className='py-3 hover:text-gray-300 transition'>
-              Gallery
-            </NavLink>
-            <NavLink to='/login' className='p-3 hover:text-purple-500 hover:bg-white/10 hover:rounded-2xl transition'>
-              Login
-            </NavLink>
-          </div>
-           <button
-              onClick={() => setIsOpen(!isOpen)}
-              className="md:hidden rounded-lg p-2 hover:bg-white/10 transition">
-              {isOpen ? (
-                <X size={26} />
-              ) : (
-                <Menu size={26} />
-              )}
-            </button>
-        </div>
+    <header className="topbar">
+      <div className="topbar-left">
+        <button
+          className="mobile-menu"
+          aria-label="Open navigation"
+          onClick={onMenuClick}
+        >
+          <Menu size={17} />
+        </button>
 
-        {isOpen && (
-        <div className="md:hidden border-t border-gray-700 px-4 py-3">
+        <Link to="/dashboard" className="mobile-brand">
+          <span className="brand-mark">D</span>
+          <span>DOGFOOD</span>
+        </Link>
 
-          <div className="flex flex-col gap-1">
+        <label className="global-search">
+          <Search size={16} aria-hidden="true" />
 
-            <NavLink
-              to="/myteam"
-              onClick={() => setIsOpen(false)}
-              className="rounded-lg px-3 py-3 text-white hover:bg-white/10 transition"
-            >
-              My Team
-            </NavLink>
+          <input
+            aria-label="Search projects and teams"
+            placeholder="Search projects, teams…"
+          />
 
-            <NavLink
-              to="/gallery"
-              onClick={() => setIsOpen(false)}
-              className="rounded-lg px-3 py-3 text-white hover:bg-white/10 transition"
-            >
-              Gallery
-            </NavLink>
+          <span className="search-shortcut">⌘ K</span>
+        </label>
+      </div>
 
-            <NavLink
-              to="/login"
-              onClick={() => setIsOpen(false)}
-              className="rounded-lg px-3 py-3 text-white hover:bg-purple-400 transition"
-            >
-              Login
-            </NavLink>
+      <div className="topbar-right">
+        <button
+          className="icon-btn"
+          aria-label="Notifications"
+          style={{ position: "relative" }}
+        >
+          <Bell size={17} />
+          <span className="notify-dot" />
+        </button>
 
-          </div>
+        <button
+          className="profile-trigger"
+          type="button"
+          onClick={logout}
+          title="Sign out"
+        >
+          <span className="avatar">{initial}</span>
 
-        </div>
-      )}
-    </div>
-  )
+          <span className="profile-copy">
+            <strong>{user?.name ?? "User"}</strong>
+            <small>{user?.role ?? "participant"}</small>
+          </span>
+
+          <ChevronDown size={14} />
+
+          <LogOut
+            size={14}
+            style={{ display: "none" }}
+          />
+        </button>
+      </div>
+    </header>
+  );
 }
-
-export default Navbar

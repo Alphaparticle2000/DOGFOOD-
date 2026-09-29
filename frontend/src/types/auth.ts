@@ -1,8 +1,17 @@
-export type UserRole = "participant" | "organizer" | "judge";
+export type UserRole =
+  | "participant"
+  | "judge"
+  | "organizer"
+  | "admin";
 
 export interface User {
-    name: string;
-    id: string;
-    email: string;
-    role: UserRole;
+  id: string;
+  name: string;
+  email: string;
+  role: UserRole;
+}
+
+export interface AuthSession {
+  accessToken: string;
+  user: User;
 }

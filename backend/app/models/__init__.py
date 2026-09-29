@@ -9,6 +9,7 @@ from backend.app.models.score import Score
 from backend.app.models.vote import Vote
 from backend.app.models.comment import Comment
 from backend.app.models.audit import AuditLog
+from backend.app.models.rubric import Rubric
 
 __all__ = [
     "User",
@@ -20,6 +21,7 @@ __all__ = [
     "Judge",
     "Submission",
     "Score",
+    "Rubric",
     "Vote",
     "Comment",
     "AuditLog",
