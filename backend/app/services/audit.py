@@ -2,7 +2,7 @@ from typing import Any
 
 from sqlalchemy.orm import Session
 
-from backend.app.models.audit_log import AuditLog
+from backend.app.models.audit import AuditLog
 
 
 def record_audit(

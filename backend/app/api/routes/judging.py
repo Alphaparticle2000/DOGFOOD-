@@ -1,16 +1,19 @@
-import csv
-import io
 from typing import Any, Dict
 from uuid import UUID
+import csv
+import io
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 
-from backend.app.api.dependencies import get_current_user, require_role
+from backend.app.api.dependencies import (
+    get_current_user,
+    require_role,
+)
 from backend.app.core.database import get_db
-from backend.app.models.judge import Judge
 from backend.app.models.rubric import Rubric
+from backend.app.models.judge import Judge
 from backend.app.models.score import Score
 from backend.app.models.submission import Submission
 from backend.app.models.team_member import TeamMember
@@ -24,6 +27,7 @@ from backend.app.services.judging import (
     normalize_judge_scores,
 )
 from backend.app.services.score_integrity import hash_scorecard
+from backend.app.services.audit import record_audit
 
 
 router = APIRouter(prefix="/judging", tags=["Judging"])
@@ -37,6 +41,7 @@ router = APIRouter(prefix="/judging", tags=["Judging"])
 def score_submission(
     submission_id: int,
     score_in: ScoreSubmission,
+    request: Request,
     current_user: Dict[str, Any] = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -78,7 +83,7 @@ def score_submission(
         )
 
     # ---------------------------------------------------------
-    # 4. Submission must be locked before judging
+    # 4. Submission must be locked
     # ---------------------------------------------------------
     if not submission.is_locked:
         raise HTTPException(
@@ -87,7 +92,7 @@ def score_submission(
         )
 
     # ---------------------------------------------------------
-    # 5. Find judge assignment for this user + event
+    # 5. Find judge assignment
     # ---------------------------------------------------------
     judge = (
         db.query(Judge)
@@ -106,9 +111,6 @@ def score_submission(
 
     # ---------------------------------------------------------
     # 6. Check track assignment
-    #
-    # NULL track_id = judge can judge all tracks in the event.
-    # Otherwise, judge must be assigned to this team's track.
     # ---------------------------------------------------------
     if judge.track_id is not None and judge.track_id != team.track_id:
         raise HTTPException(
@@ -153,7 +155,7 @@ def score_submission(
         )
 
     # ---------------------------------------------------------
-    # 9. Validate score using judging service
+    # 9. Validate score
     # ---------------------------------------------------------
     score_input = ScoreInput(
         functionality=score_in.functionality,
@@ -171,21 +173,23 @@ def score_submission(
         )
 
     # ---------------------------------------------------------
-    # 10. Create immutable scorecard hash
+    # 10. Build immutable scorecard
     # ---------------------------------------------------------
-    scorecard_data = {
+    scorecard = {
         "submission_id": submission.id,
         "judge_id": str(judge_user_id),
-        "functionality": score_in.functionality,
-        "quality": score_in.quality,
-        "innovation": score_in.innovation,
+        "criteria": {
+            "functionality": score_in.functionality,
+            "quality": score_in.quality,
+            "innovation": score_in.innovation,
+        },
         "comment": score_in.comment or "",
     }
 
-    scorecard_hash = hash_scorecard(scorecard_data)
+    scorecard_hash = hash_scorecard(scorecard)
 
     # ---------------------------------------------------------
-    # 11. Save score + integrity hash
+    # 11. Save score
     # ---------------------------------------------------------
     score = Score(
         submission_id=submission.id,
@@ -198,20 +202,34 @@ def score_submission(
     )
 
     db.add(score)
+    db.flush()
 
-    try:
-        db.commit()
-    except Exception:
-        db.rollback()
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to save score.",
-        )
+    # ---------------------------------------------------------
+    # 12. Immutable audit record
+    # ---------------------------------------------------------
+    record_audit(
+        db,
+        actor_id=str(judge_user_id),
+        action="score_submitted",
+        entity_type="score",
+        entity_id=str(score.id),
+        ip_address=request.client.host if request.client else None,
+        after_data={
+            "submission_id": score.submission_id,
+            "judge_id": str(score.judge_id),
+            "functionality": score.functionality,
+            "quality": score.quality,
+            "innovation": score.innovation,
+            "comment": score.comment or "",
+            "scorecard_hash": score.scorecard_hash,
+        },
+    )
 
+    db.commit()
     db.refresh(score)
 
     # ---------------------------------------------------------
-    # 12. Return API response
+    # 13. Return API response
     # ---------------------------------------------------------
     return ScoreResponse(
         message="Score submitted successfully.",
@@ -236,119 +254,43 @@ def get_judging_results(
     ),
     db: Session = Depends(get_db),
 ):
-    # ---------------------------------------------------------
-    # 1. Get locked submissions for event
-    # ---------------------------------------------------------
     submissions = (
         db.query(Submission)
         .join(Submission.team)
         .filter(
             Submission.is_locked.is_(True),
-            Submission.team.has(
-                event_id=event_id
-            ),
+            Submission.team.has(event_id=event_id),
         )
         .all()
     )
 
-    # ---------------------------------------------------------
-    # 2. Build rubric lookup
-    # ---------------------------------------------------------
-    rubric_by_track = {}
-
-    rubrics = (
-        db.query(Rubric)
-        .filter(
-            Rubric.event_id == event_id,
-            Rubric.is_active.is_(True),
-        )
-        .all()
-    )
-
-    for rubric in rubrics:
-        rubric_by_track[rubric.track_id] = rubric
-
-    # ---------------------------------------------------------
-    # 3. Collect ALL scores first.
-    #
-    # IMPORTANT:
-    # Normalization must happen across a judge's scores for
-    # the event, NOT separately for every submission.
-    # ---------------------------------------------------------
-    all_score_dicts = []
-    submission_scores = {}
+    results = []
 
     for submission in submissions:
         scores = (
             db.query(Score)
-            .filter(
-                Score.submission_id == submission.id
-            )
+            .filter(Score.submission_id == submission.id)
             .all()
         )
 
-        submission_scores[submission.id] = scores
-
-        rubric = rubric_by_track.get(submission.team.track_id)
-
-        if rubric is None:
-            rubric = rubric_by_track.get(None)
+        rubric = (
+            db.query(Rubric)
+            .filter(
+                Rubric.event_id == event_id,
+                Rubric.is_active.is_(True),
+                (
+                    (Rubric.track_id == submission.team.track_id)
+                    | Rubric.track_id.is_(None)
+                ),
+            )
+            .order_by(Rubric.track_id.desc())
+            .first()
+        )
 
         weights = (
             rubric.criteria_weights
             if rubric
             else DEFAULT_WEIGHTS
-        )
-
-        for score in scores:
-            criteria = {
-                "functionality": score.functionality,
-                "quality": score.quality,
-                "innovation": score.innovation,
-            }
-
-            all_score_dicts.append(
-                {
-                    "id": score.id,
-                    "judge": str(score.judge_id),
-                    "project": str(submission.id),
-                    "criteria": criteria,
-                    "weights": weights,
-                    "comment": score.comment or "",
-                }
-            )
-
-    # ---------------------------------------------------------
-    # 4. Normalize across all event scores
-    # ---------------------------------------------------------
-    normalized_scores = normalize_judge_scores(
-        all_score_dicts
-    )
-
-    normalized_by_project = {}
-
-    for item in normalized_scores:
-        project_id = int(item["project"])
-
-        normalized_by_project.setdefault(
-            project_id,
-            []
-        ).append(item)
-
-    # ---------------------------------------------------------
-    # 5. Build final project results
-    # ---------------------------------------------------------
-    results = []
-
-    for submission in submissions:
-        scores = submission_scores.get(
-            submission.id,
-            []
-        )
-
-        normalized = normalized_by_project.get(
-            submission.id,
-            []
         )
 
         if not scores:
@@ -362,6 +304,26 @@ def get_judging_results(
                 }
             )
             continue
+
+        score_dicts = []
+
+        for score in scores:
+            score_dicts.append(
+                {
+                    "id": score.id,
+                    "judge": str(score.judge_id),
+                    "project": str(submission.id),
+                    "criteria": {
+                        "functionality": score.functionality,
+                        "quality": score.quality,
+                        "innovation": score.innovation,
+                    },
+                    "weights": weights,
+                    "comment": score.comment or "",
+                }
+            )
+
+        normalized = normalize_judge_scores(score_dicts)
 
         weighted_average = round(
             sum(
@@ -391,18 +353,12 @@ def get_judging_results(
             }
         )
 
-    # ---------------------------------------------------------
-    # 6. Sort and assign rank
-    # ---------------------------------------------------------
     results.sort(
         key=lambda x: x["normalized_average"],
         reverse=True,
     )
 
-    for index, result in enumerate(
-        results,
-        start=1,
-    ):
+    for index, result in enumerate(results, start=1):
         result["rank"] = index
 
     return {
@@ -421,17 +377,12 @@ def export_judging_csv(
     ),
     db: Session = Depends(get_db),
 ):
-    # ---------------------------------------------------------
-    # 1. Get locked submissions
-    # ---------------------------------------------------------
     submissions = (
         db.query(Submission)
         .join(Submission.team)
         .filter(
             Submission.is_locked.is_(True),
-            Submission.team.has(
-                event_id=event_id
-            ),
+            Submission.team.has(event_id=event_id),
         )
         .all()
     )
@@ -448,21 +399,15 @@ def export_judging_csv(
             "quality",
             "innovation",
             "weighted_score",
-            "scorecard_hash",
             "comment",
             "created_at",
         ]
     )
 
-    # ---------------------------------------------------------
-    # 2. Export scores
-    # ---------------------------------------------------------
     for submission in submissions:
         scores = (
             db.query(Score)
-            .filter(
-                Score.submission_id == submission.id
-            )
+            .filter(Score.submission_id == submission.id)
             .all()
         )
 
@@ -473,12 +418,10 @@ def export_judging_csv(
                 Rubric.is_active.is_(True),
                 (
                     (Rubric.track_id == submission.team.track_id)
-                    | (Rubric.track_id.is_(None))
+                    | Rubric.track_id.is_(None)
                 ),
             )
-            .order_by(
-                Rubric.track_id.desc()
-            )
+            .order_by(Rubric.track_id.desc())
             .first()
         )
 
@@ -509,7 +452,6 @@ def export_judging_csv(
                     score.quality,
                     score.innovation,
                     weighted,
-                    score.scorecard_hash or "",
                     score.comment or "",
                     score.created_at,
                 ]

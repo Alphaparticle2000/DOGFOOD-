@@ -1,15 +1,21 @@
+from typing import Any, Dict
+
 from fastapi import APIRouter, Depends, HTTPException, Request, status
-from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from backend.app.api.dependencies import get_current_user
 from backend.app.core.database import get_db
 from backend.app.models.submission import Submission
 from backend.app.models.vote import Vote
-from backend.app.schemas.vote import VoteCount, VoteCreate, VoteResponse
+from backend.app.schemas.vote import (
+    VoteCreate,
+    VoteResponse,
+    VoteCount,
+)
+from backend.app.services.audit import record_audit
 from backend.app.services.vote_abuse import (
-    calculate_vote_anomaly,
     check_rate_limit,
+    calculate_vote_anomaly,
 )
 
 
@@ -22,47 +28,14 @@ router = APIRouter(prefix="/votes", tags=["Votes"])
     status_code=status.HTTP_201_CREATED,
 )
 def cast_vote(
-    payload: VoteCreate,
+    vote_in: VoteCreate,
     request: Request,
+    current_user: Dict[str, Any] = Depends(get_current_user),
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user),
 ):
-    """
-    Cast a community vote.
-
-    Community votes remain completely separate from official judging scores.
-    """
-
-    client_ip = request.client.host if request.client else "unknown"
-    user_agent = request.headers.get("user-agent", "")[:512]
-
-    fingerprint = request.headers.get(
-        "x-browser-fingerprint"
-    )
-
-    if fingerprint:
-        fingerprint = fingerprint[:128]
-
-    user_id = current_user.get("id")
-
-    if not user_id:
-        raise HTTPException(
-            status_code=401,
-            detail="Authenticated user ID is missing.",
-        )
-
-    # Rate-limit by authenticated identity.
-    try:
-        check_rate_limit(f"user:{user_id}")
-    except ValueError as exc:
-        raise HTTPException(
-            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-            detail=str(exc),
-        )
-
     submission = (
         db.query(Submission)
-        .filter(Submission.id == payload.submission_id)
+        .filter(Submission.id == vote_in.submission_id)
         .first()
     )
 
@@ -72,10 +45,21 @@ def cast_vote(
             detail="Submission not found.",
         )
 
+    user_id = current_user["id"]
+
+    # Rate-limit by authenticated user.
+    try:
+        check_rate_limit(str(user_id))
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail=str(exc),
+        )
+
     existing_vote = (
         db.query(Vote)
         .filter(
-            Vote.submission_id == payload.submission_id,
+            Vote.submission_id == vote_in.submission_id,
             Vote.user_id == user_id,
         )
         .first()
@@ -87,41 +71,70 @@ def cast_vote(
             detail="You have already voted for this submission.",
         )
 
-    # Abuse telemetry.
-    recent_vote_count = (
-        db.query(func.count(Vote.id))
-        .filter(Vote.ip_address == client_ip)
-        .scalar()
-        or 0
+    ip_address = (
+        request.client.host
+        if request.client
+        else None
     )
 
-    same_fingerprint_count = 0
+    user_agent = request.headers.get("user-agent")
+    fingerprint = request.headers.get("x-browser-fingerprint")
 
-    if fingerprint:
-        same_fingerprint_count = (
-            db.query(func.count(Vote.id))
-            .filter(Vote.fingerprint == fingerprint)
-            .scalar()
-            or 0
-        )
+    recent_vote_count = (
+        db.query(Vote)
+        .filter(Vote.user_id == user_id)
+        .count()
+    )
+
+    same_ip_count = (
+        db.query(Vote)
+        .filter(Vote.ip_address == ip_address)
+        .count()
+        if ip_address
+        else 0
+    )
+
+    same_fingerprint_count = (
+        db.query(Vote)
+        .filter(Vote.fingerprint == fingerprint)
+        .count()
+        if fingerprint
+        else 0
+    )
 
     anomaly = calculate_vote_anomaly(
         recent_vote_count=recent_vote_count,
-        same_ip_count=recent_vote_count,
+        same_ip_count=same_ip_count,
         same_fingerprint_count=same_fingerprint_count,
     )
 
-    # We don't silently destroy suspicious votes.
-    # Store them and expose the anomaly to organizers later.
     vote = Vote(
-        submission_id=payload.submission_id,
+        submission_id=vote_in.submission_id,
         user_id=user_id,
-        ip_address=client_ip,
+        ip_address=ip_address,
         user_agent=user_agent,
         fingerprint=fingerprint,
     )
 
     db.add(vote)
+    db.flush()
+
+    record_audit(
+        db,
+        actor_id=str(user_id),
+        action="vote_cast",
+        entity_type="vote",
+        entity_id=str(vote.id),
+        ip_address=ip_address,
+        after_data={
+            "submission_id": vote.submission_id,
+            "user_id": str(vote.user_id),
+            "anomaly_flag": anomaly,
+            "ip_address": ip_address,
+            "fingerprint": fingerprint,
+        },
+    )
+
     db.commit()
     db.refresh(vote)
 
@@ -149,10 +162,9 @@ def get_vote_count(
         )
 
     count = (
-        db.query(func.count(Vote.id))
+        db.query(Vote)
         .filter(Vote.submission_id == submission_id)
-        .scalar()
-        or 0
+        .count()
     )
 
     return VoteCount(
