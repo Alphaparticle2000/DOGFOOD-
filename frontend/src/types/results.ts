@@ -1,6 +1,12 @@
+export interface SubmissionResult {
+  submissionId: string;
+  projectTitle: string;
+  rawScore: number;
+  normalizedScore?: number;
+  rank?: number;
+}
+
 export interface Result {
-    projectId: string;
-    totalScore: number;
-    rank: number;
-    criteriaBreakdown: string
+  eventId: string;
+  results: SubmissionResult[];
 }
