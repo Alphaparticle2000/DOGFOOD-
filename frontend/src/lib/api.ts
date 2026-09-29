@@ -1,5 +1,23 @@
-const API_BASE_URL =
-  import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
+declare global {
+  interface Window {
+    __DOGFOOD_ENV__?: Record<string, string>;
+  }
+}
+
+function resolveApiBase(): string {
+  const fromBuild = import.meta.env.VITE_API_URL as string | undefined;
+  const fromRuntime =
+    typeof window !== "undefined"
+      ? window.__DOGFOOD_ENV__?.VITE_API_URL
+      : undefined;
+  const raw = (fromBuild || fromRuntime || "http://localhost:8000/api").trim();
+  const noSlash = raw.replace(/\/+$/, "");
+  // Render wires VITE_API_URL to the backend's base URL (no /api suffix);
+  // local .env already includes /api. Accept both.
+  return noSlash.endsWith("/api") ? noSlash : `${noSlash}/api`;
+}
+
+const API_BASE_URL = resolveApiBase();
 
 async function request<T>(
   endpoint: string,

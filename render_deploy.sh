@@ -9,7 +9,10 @@
 # plan, healthCheckPath) goes inside `serviceDetails`.
 set -euo pipefail
 
-RENDER_KEY='rnd_nCkdWlCjqBvxtPR7xfYJtLVaci9R'
+if [[ -z "${RENDER_API_KEY:-}" ]]; then
+  echo "Set RENDER_API_KEY in the environment before using this script." >&2
+  exit 1
+fi
 OWNER='tea-d5f509e3jp1c73blf1ug'
 API='https://api.render.com/v1/services'
 ENVFILE='/c/Projects/DOGFOOD-/.env'
@@ -38,7 +41,7 @@ FRONTEND_URL='https://dogfood-frontend.onrender.com'
 
 echo "Creating dogfood-backend ..."
 RESP_B=$(curl -sS -X POST "$API" \
-  -H "Authorization: Bearer $RENDER_KEY" \
+  -H "Authorization: Bearer $RENDER_API_KEY" \
   -H "Accept: application/json" \
   -H "Content-Type: application/json" \
   -d "{
@@ -70,7 +73,7 @@ echo "$RESP_B" > "${OUT}resp_backend.json"
 
 echo "Creating dogfood-frontend ..."
 RESP_F=$(curl -sS -X POST "$API" \
-  -H "Authorization: Bearer $RENDER_KEY" \
+  -H "Authorization: Bearer $RENDER_API_KEY" \
   -H "Accept: application/json" \
   -H "Content-Type: application/json" \
   -d "{
@@ -107,7 +110,7 @@ echo "Frontend id=$F_ID url=${F_URL:-$FRONTEND_URL}"
 if [ -n "$F_URL" ] && [ "$F_URL" != "$FRONTEND_URL" ]; then
   echo "Frontend URL differs from predicted; patching backend ALLOWED_ORIGINS ..."
   curl -sS -X PUT "$API/$B_ID/env-vars" \
-    -H "Authorization: Bearer $RENDER_KEY" \
+    -H "Authorization: Bearer $RENDER_API_KEY" \
     -H "Accept: application/json" \
     -H "Content-Type: application/json" \
     -d "[{\"key\":\"ALLOWED_ORIGINS\",\"value\":\"$F_URL\"}]" \

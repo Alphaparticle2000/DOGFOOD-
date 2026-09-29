@@ -19,7 +19,7 @@ services:
   - type: web
     name: dogfood-backend
     runtime: docker
-    repo: https://github.com/KingSahil/DOGFOOD-.git
+    repo: https://github.com/Alphaparticle2000/DOGFOOD-.git
     branch: main
     region: singapore
     plan: free
@@ -66,7 +66,7 @@ services:
   - type: web
     name: dogfood-frontend
     runtime: docker
-    repo: https://github.com/KingSahil/DOGFOOD-.git
+    repo: https://github.com/Alphaparticle2000/DOGFOOD-.git
     branch: main
     region: singapore
     plan: free

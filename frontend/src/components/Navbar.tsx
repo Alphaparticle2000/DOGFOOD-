@@ -3,10 +3,10 @@ import { Link } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 
 type NavbarProps = {
-  onMenuClick: () => void;
+  onMenuClick?: () => void;
 };
 
-export default function Navbar({ onMenuClick }: NavbarProps) {
+export default function Navbar({ onMenuClick = () => {} }: NavbarProps) {
   const { user, logout } = useAuth();
 
   const initial = (user?.name?.trim()?.[0] ?? "U").toUpperCase();
