@@ -7,15 +7,11 @@ def randomized_projects(
     seed: int | None = None,
 ) -> list:
     """
-    Randomize project display order.
+    Return projects in a deterministic randomized order.
 
-    A supplied seed produces a deterministic order, allowing a user
-    to see the same ordering across pagination/session requests.
+    The same seed produces the same ordering, which allows a gallery
+    session to keep a stable randomized ballot.
     """
-
     result = list(projects)
-
-    rng = random.Random(seed)
-    rng.shuffle(result)
-
+    random.Random(seed).shuffle(result)
     return result
