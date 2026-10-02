@@ -1,0 +1,103 @@
+# ==============================================================================
+# DOGFOOD — Render Blueprint (Infrastructure as Code)
+#
+# Two Docker web services, both built from this repo:
+#   dogfood-backend   FastAPI  (backend/Dockerfile,  repo-root build context)
+#   dogfood-frontend  React SPA (frontend/Dockerfile, frontend build context)
+#
+# Database is the existing Supabase Postgres — no Render database is provisioned.
+#
+# Deploy: Dashboard -> Blueprints -> "New Blueprint Instance" -> select this repo.
+# Values marked `sync: false` are secrets you fill in once in the Render
+# dashboard; they are deliberately NOT stored in git.
+# ==============================================================================
+
+services:
+  # ---------------------------------------------------------------------------
+  # Backend — FastAPI
+  # ---------------------------------------------------------------------------
+  - type: web
+    name: dogfood-backend
+    runtime: docker
+    repo: https://github.com/Alphaparticle2000/DOGFOOD-.git
+    branch: main
+    region: singapore
+    plan: free
+    # The backend Dockerfile copies backend/ and fixtures.json, so the context
+    # must be the repository root.
+    dockerContext: .
+    dockerfilePath: ./backend/Dockerfile
+    healthCheckPath: /health
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: DEBUG
+        value: "false"
+      - key: API_V1_STR
+        value: /api
+      - key: BACKEND_HOST
+        value: 0.0.0.0
+
+      # Supabase — secrets, set once per environment in the Render dashboard.
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_ANON_KEY
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: SUPABASE_JWT_SECRET
+        sync: false
+      # Supabase pooler URI, e.g.
+      # postgresql://postgres.<ref>:<pw>@aws-0-ap-south-1.pooler.supabase.com:6543/postgres?sslmode=require
+      - key: DATABASE_URL
+        sync: false
+
+      # CORS — resolved automatically from the frontend service's public URL,
+      # so no hard-coded hostname and no rebuild when the URL changes.
+      - key: ALLOWED_ORIGINS
+        fromService:
+          type: web
+          name: dogfood-frontend
+          envVarKey: RENDER_EXTERNAL_URL
+
+  # ---------------------------------------------------------------------------
+  # Frontend — React + Vite served by nginx
+  # ---------------------------------------------------------------------------
+  - type: web
+    name: dogfood-frontend
+    runtime: docker
+    repo: https://github.com/Alphaparticle2000/DOGFOOD-.git
+    branch: main
+    region: singapore
+    plan: free
+    dockerContext: ./frontend
+    dockerfilePath: ./frontend/Dockerfile
+    healthCheckPath: /health
+    envVars:
+      # Backend base URL, e.g. https://dogfood-backend.onrender.com
+      # The React app is expected to append /api itself (see README).
+      - key: VITE_API_URL
+        fromService:
+          type: web
+          name: dogfood-backend
+          envVarKey: RENDER_EXTERNAL_URL
+      - key: VITE_SUPABASE_URL
+        sync: false
+      - key: VITE_SUPABASE_ANON_KEY
+        sync: false
+
+# ------------------------------------------------------------------------------
+# NOTE ON VITE ENVIRONMENT VARIABLES
+#
+# Vite inlines import.meta.env at BUILD time, and Render does not expose plain
+# env vars to `docker build`. The frontend entrypoint therefore also writes
+# these values to /env.js at container start, exposing them as
+# window.__DOGFOOD_ENV__.VITE_* — so they can be changed in the dashboard
+# without a rebuild. Read them with:
+#
+#   const apiUrl = import.meta.env.VITE_API_URL
+#              || window.__DOGFOOD_ENV__?.VITE_API_URL
+#
+# ALLOWED_ORIGINS (backend) and VITE_API_URL (frontend) are wired automatically
+# via fromService once both services exist.
+# ------------------------------------------------------------------------------

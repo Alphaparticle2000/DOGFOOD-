@@ -1,0 +1,11 @@
+# Frontend build context is ./frontend, so the repo-root .dockerignore does not
+# apply here. Keep the host's node_modules and build output out of the image.
+node_modules/
+dist/
+dist-ssr/
+.git
+.env
+.env.*
+*.local
+npm-debug.log*
+README.md

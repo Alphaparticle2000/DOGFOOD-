@@ -3,17 +3,37 @@ from fastapi import FastAPI, Depends, status
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
 from sqlalchemy.orm import Session
+import logging
 
 from backend.app.core.config import settings
 from backend.app.core.database import Base, engine, get_db
 from backend.app.api.routes import api_router
 import backend.app.models  # noqa: F401
 
+logger = logging.getLogger(__name__)
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Ensure tables exist on startup (useful for dev / test environments)
-    Base.metadata.create_all(bind=engine)
+    # Create missing tables; never crash the container if the DB is
+    # unreachable at startup (Render healthcheck hits /health, not /health/db).
+    # This also lets an existing Supabase DB pick up the new merged tables
+    # (rubrics, audit_logs, gallery/vote features) without a manual migration.
+    try:
+        Base.metadata.create_all(bind=engine)
+    except Exception as e:
+        logger.warning("DB create_all skipped at startup: %s", e)
+    else:
+        # Best-effort: add new columns to pre-existing tables (IF NOT EXISTS)
+        # so old deployments keep working after this merge.
+        try:
+            with engine.begin() as conn:
+                conn.execute(text("ALTER TABLE scores ADD COLUMN IF NOT EXISTS scorecard_hash VARCHAR(64)"))
+                conn.execute(text("ALTER TABLE votes ADD COLUMN IF NOT EXISTS ip_address VARCHAR(45)"))
+                conn.execute(text("ALTER TABLE votes ADD COLUMN IF NOT EXISTS user_agent VARCHAR(512)"))
+                conn.execute(text("ALTER TABLE votes ADD COLUMN IF NOT EXISTS fingerprint VARCHAR(128)"))
+        except Exception as e:
+            logger.warning("DB column ensure skipped: %s", e)
     yield
 
 

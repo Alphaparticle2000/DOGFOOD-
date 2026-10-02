@@ -1,0 +1,63 @@
+# nginx configuration template.
+# ${PORT} is substituted by docker-entrypoint.sh via envsubst at container start,
+# because platforms like Render assign the listening port dynamically.
+
+worker_processes auto;
+error_log  /var/log/nginx/error.log warn;
+pid        /tmp/nginx.pid;
+
+events {
+    worker_connections 1024;
+}
+
+http {
+    include       /etc/nginx/mime.types;
+    default_type  application/octet-stream;
+
+    access_log /var/log/nginx/access.log;
+
+    sendfile           on;
+    keepalive_timeout  65;
+    server_tokens      off;
+
+    gzip on;
+    gzip_vary on;
+    gzip_min_length 1024;
+    gzip_types text/plain text/css application/json application/javascript
+               text/javascript application/xml image/svg+xml;
+
+    server {
+        listen ${PORT};
+        server_name _;
+
+        root  /usr/share/nginx/html;
+        index index.html;
+
+        # react-router (BrowserRouter) deep links must fall back to index.html.
+        location / {
+            try_files $uri $uri/ /index.html;
+        }
+
+        # Vite emits content-hashed assets under /assets/ — cache them hard.
+        location /assets/ {
+            expires 1y;
+            add_header Cache-Control "public, immutable";
+        }
+
+        # Never cache the SPA shell itself, or deploys serve stale HTML.
+        location = /index.html {
+            add_header Cache-Control "no-store, must-revalidate";
+        }
+
+        # Runtime-generated env shim (see docker-entrypoint.sh).
+        location = /env.js {
+            add_header Cache-Control "no-store";
+        }
+
+        location = /health {
+            access_log off;
+            default_type text/plain;
+            return 200 "healthy\n";
+        }
+    }
+}

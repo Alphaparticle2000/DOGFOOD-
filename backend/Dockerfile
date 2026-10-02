@@ -1,28 +1,43 @@
+# ==============================================================================
+# DOGFOOD Backend — FastAPI (production image)
+#
+# Runs as a non-root user and binds to the platform-assigned $PORT so the same
+# image works locally, under Docker Compose, and on Render.
+# docker-compose.yml overrides CMD with --reload for local development.
+# ==============================================================================
+
 FROM python:3.11-slim
 
-# Prevent Python from writing .pyc files and enable unbuffered output
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
-    PYTHONPATH=/app
+    PYTHONPATH=/app \
+    PIP_NO_CACHE_DIR=1
 
 WORKDIR /app
 
-# Install curl for docker healthchecks
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    curl \
+# curl backs the Docker HEALTHCHECK below.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Install python dependencies
+# Dependencies are copied alone first so this layer caches across source edits.
 COPY backend/requirements.txt /app/requirements.txt
-RUN pip install --no-cache-dir -r /app/requirements.txt
+# --retries/--timeout so a slow or flaky registry does not fail the whole build.
+RUN pip install --no-cache-dir --retries 5 --timeout 120 \
+    -r /app/requirements.txt
 
-# Copy source code
-COPY . /app
+# Application source. The package is imported as backend.app.* (PYTHONPATH=/app).
+COPY backend/ /app/backend/
+COPY fixtures.json /app/fixtures.json
+
+RUN useradd --create-home --uid 10001 appuser \
+    && chown -R appuser:appuser /app
+USER appuser
 
 EXPOSE 8000
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
-  CMD curl -f http://localhost:8000/health || curl -f http://localhost:8000/api/health || exit 1
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+  CMD curl -f "http://127.0.0.1:${PORT:-8000}/health" || exit 1
 
-CMD ["uvicorn", "backend.app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+# Render injects PORT; fall back to 8000 for local runs.
+CMD ["sh", "-c", "exec uvicorn backend.app.main:app --host 0.0.0.0 --port \"${PORT:-8000}\""]
