@@ -1,139 +1,198 @@
-# DOGFOOD ΓÇö Hackathon Management Platform
+# DOGFOOD — Enterprise Hackathon Management Platform
 
-A high-performance hackathon management platform built with **FastAPI**, **Supabase**, and **React + Vite**.
+[![CI/CD](https://github.com/DikshantDuggal/DOGFOOD/actions/workflows/ci.yml/badge.svg)](https://github.com/DikshantDuggal/DOGFOOD/actions)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.110+-009688.svg?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
+[![React](https://img.shields.io/badge/React-18+-61DAFB.svg?logo=react&logoColor=black)](https://react.dev)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-3178C6.svg?logo=typescript&logoColor=white)](https://www.typescriptlang.org)
+[![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL%20%7C%20Auth-3ECF8E.svg?logo=supabase&logoColor=white)](https://supabase.com)
+[![Docker](https://img.shields.io/badge/Docker-Ready-2496ED.svg?logo=docker&logoColor=white)](https://www.docker.com)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
----
-
-## Architecture Overview
-
-* **Authentication & Identity:** Supabase Auth (JWT validation in FastAPI via `backend/app/api/dependencies.py`).
-* **Database:** Supabase PostgreSQL with SQLAlchemy & connection pooling.
-* **Storage:** Supabase Storage buckets for submission artifacts, pitch decks, and media.
-* **Judging Engine:** Pure business logic judging engine in `backend/app/services/judging.py`.
-* **DevOps & Infrastructure:** Docker, Docker Compose, automated health checks, and GitHub Actions CI.
+**DOGFOOD** is an enterprise-grade, high-performance hackathon operating system and submission evaluation platform. Built with **FastAPI**, **Supabase (PostgreSQL & Auth)**, and **React + Vite**, DOGFOOD orchestrates end-to-end hackathon lifecycles: from team formation and multi-track project submissions to cryptographic judging, community voting, and automated leaderboard calculation.
 
 ---
 
-## Quickstart Guide
+## 🌟 Key Platform Features
 
-### 1. Environment Setup
+### 1. 👥 Team Formation & Management
+* **Dynamic Invite Codes:** Cryptographically unique join codes for team invitations.
+* **Role-Based Membership:** Lead, contributor, and mentor role assignments.
+* **Track Registration:** Multi-track hackathon allocation (e.g., AI/ML, Web3, FinTech, DevTools, Open Innovation).
 
-Copy the environment template and fill in your Supabase project credentials:
+### 2. 🚀 Project Submissions & Artifact Locking
+* **Comprehensive Project Specs:** Titles, elevator summaries, markdown descriptions, GitHub repositories, video demo links, and tech stack tags.
+* **Deadline Enforcement:** Automatic write-locking of submission records once judging commences.
+* **Rich Project Showcase:** Public gallery with deterministic randomized shuffling to prevent presentation bias.
+
+### 3. ⚖️ T2 Cryptographic Judging Engine
+* **Multi-Criteria Scoring Rubrics:** Normalized multi-dimensional evaluations (Innovation, Technical Execution, Real-World Impact, UI/UX).
+* **Ed25519 Scorecard Signing:** Cryptographic signature verification ensuring judge evaluations remain tamper-proof and auditable.
+* **Normalized Aggregate Scoring:** Outlier dampening and automated ranking computation.
+
+### 4. 🗳️ Sybil-Resistant Community Voting
+* **Participant Voting:** Community voting portal with real-time tallying and anti-tamper constraints.
+* **Audit Logging:** Administrative event stream tracking all scoring, voting, and status transitions.
+
+### 5. 🚢 Production Infrastructure & Deployment
+* **Docker & Docker Compose:** Orchestrated multi-container stack with health checks and volume persistence.
+* **Cloud Ready on Render:** Complete `render.yaml` Blueprint definition with zero-downtime rolling deploys and automatic environment synchronization.
+
+---
+
+## 🏛️ System Architecture
+
+```text
+                           ┌────────────────────────────┐
+                           │      React 18 + Vite       │
+                           │   (Tailwind CSS Frontend)  │
+                           └──────────────┬─────────────┘
+                                          │
+                                   REST / JSON (JWT)
+                                          │
+                                          ▼
+                           ┌────────────────────────────┐
+                           │      FastAPI Backend       │
+                           │     (Python 3.11/3.12)     │
+                           └──────┬──────────────┬──────┘
+                                  │              │
+                   SQLAlchemy ORM │              │ Ed25519
+                                  ▼              ▼
+                    ┌──────────────────┐   ┌──────────────────┐
+                    │ Supabase Postgres│   │ Cryptographic    │
+                    │   & Auth Engine  │   │ Score Verification│
+                    └──────────────────┘   └──────────────────┘
+```
+
+---
+
+## 📂 Repository Directory Layout
+
+```text
+DOGFOOD/
+├── backend/
+│   ├── app/
+│   │   ├── api/             # API routes (events, teams, submissions, judges, votes, results)
+│   │   │   └── dependencies.py # Supabase JWT validation & auth guards
+│   │   ├── core/            # App configuration, database engine, security
+│   │   ├── models/          # SQLAlchemy relational models
+│   │   ├── schemas/         # Pydantic v2 validation schemas
+│   │   ├── services/        # Judging engine, fixture loader, cryptographic verification
+│   │   └── main.py          # FastAPI application entrypoint & middleware
+│   ├── tests/               # Pytest suite & health validation probes
+│   ├── Dockerfile           # Backend container image
+│   └── requirements.txt     # Python dependencies
+├── frontend/
+│   ├── src/
+│   │   ├── components/      # UI components (cards, modals, inputs, layout)
+│   │   ├── pages/           # Dashboard, Gallery, Judging, Voting, Submissions
+│   │   ├── lib/             # API clients, Supabase SDK, runtime environment resolver
+│   │   └── App.tsx          # React Router declarative routing
+│   ├── Dockerfile           # Production Node build + Nginx static server
+│   └── package.json         # Frontend dependencies
+├── docker/
+│   └── postgres/init.sql    # Local database initialization fallback
+├── docs/
+│   └── repo.md              # Repository architecture specification
+├── docker-compose.yml       # Complete local microservices stack
+├── render.yaml              # Render cloud infrastructure blueprint
+└── repo.md                  # Comprehensive architectural map & team boundaries
+```
+
+---
+
+## ⚡ Quickstart Guide
+
+### 1. Environment Configuration
+
+Clone the repository and copy the environment template:
 
 ```bash
+git clone https://github.com/DikshantDuggal/DOGFOOD.git
+cd DOGFOOD
 cp .env.example .env
 ```
 
-Required Supabase credentials (from your Supabase Dashboard -> Project Settings -> API):
-* `SUPABASE_URL`
-* `SUPABASE_ANON_KEY`
-* `SUPABASE_JWT_SECRET`
-* `DATABASE_URL` (Direct port `5432` or Pooler port `6543`)
+Configure your Supabase project credentials in `.env`:
+```env
+SUPABASE_URL="https://your-project.supabase.co"
+SUPABASE_ANON_KEY="your-supabase-anon-key"
+SUPABASE_SERVICE_ROLE_KEY="your-service-role-key"
+SUPABASE_JWT_SECRET="your-jwt-secret"
+DATABASE_URL="postgresql://postgres:postgres@localhost:5432/dogfood"
+```
 
 ### 2. Running with Docker Compose (Recommended)
 
-To start the entire stack (FastAPI backend and local fallback PostgreSQL):
+To start the full stack (FastAPI backend, React frontend, and local PostgreSQL database):
 
 ```bash
 docker compose up --build
 ```
 
-The services will be available at:
-* **FastAPI Backend:** [http://localhost:8000](http://localhost:8000)
-* **Interactive API Docs (Swagger):** [http://localhost:8000/docs](http://localhost:8000/docs)
-* **Backend Health Check:** [http://localhost:8000/health](http://localhost:8000/health)
-* **Database Readiness Probe:** [http://localhost:8000/health/db](http://localhost:8000/health/db)
-* **Frontend:** [http://localhost:5173](http://localhost:5173)
+Access the running services:
+* 🌐 **React Frontend Application:** [http://localhost:8080](http://localhost:8080) (or dev HMR on [http://localhost:5173](http://localhost:5173))
+* ⚡ **FastAPI Backend API:** [http://localhost:8000](http://localhost:8000)
+* 📖 **Interactive OpenAPI Documentation (Swagger):** [http://localhost:8000/docs](http://localhost:8000/docs)
+* 🩺 **Backend Liveness Health Probe:** [http://localhost:8000/health](http://localhost:8000/health)
+* 🗄️ **Database Readiness Health Probe:** [http://localhost:8000/health/db](http://localhost:8000/health/db)
 
-### 3. Running Backend Locally (Without Docker)
+### 3. Local Development (Without Docker)
 
+#### Backend Setup:
 ```bash
-# Create virtual environment
+cd backend
 python -m venv .venv
 source .venv/bin/activate  # On Windows: .venv\Scripts\activate
-
-# Install dependencies
-pip install -r backend/requirements.txt
-
-# Run FastAPI server
+pip install -r requirements.txt
 uvicorn backend.app.main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
-### 4. Running Tests
-
+#### Frontend Setup:
 ```bash
-pytest -v
+cd frontend
+npm install
+npm run dev
 ```
 
 ---
 
-## Deployment (Render)
+## 📡 Core API Endpoints
 
-The stack is deployed as **two Docker web services** defined in `render.yaml`
-(a Render Blueprint). Both build from this repository; the database remains the
-existing Supabase Postgres instance.
-
-| Service            | Dockerfile              | Build context | Live URL |
-| ------------------ | ----------------------- | ------------- | --- |
-| `dogfood-backend`  | `backend/Dockerfile`    | repo root     | `https://dogfood-backend-nksw.onrender.com` |
-| `dogfood-frontend` | `frontend/Dockerfile`   | `./frontend`  | `https://dogfood-frontend-9sqy.onrender.com` |
-
-### Current live deployment
-
-The services above are **live**. They were created with `render_deploy.sh`
-(Render API v1, `runtime: image`) pulling the public Docker Hub images
-`supremesahil/dogfood-backend:latest` and `supremesahil/dogfood-frontend:latest`.
-Render assigned **suffixed** subdomains (the base `dogfood-backend` /
-`dogfood-frontend` names were already taken), so the URLs above are the real
-ones ΓÇö do not assume `ΓÇªonrender.com` without the suffix.
-
-> Secrets (`DATABASE_URL`, `SUPABASE_*`, `VITE_SUPABASE_*`) are injected as
-> Render env vars per service, not baked into the images. The backend's
-> `ALLOWED_ORIGINS` and the frontend's `VITE_API_URL` were set to the actual
-> suffixed URLs so CORS resolves without hard-coded hosts.
-
-### First-time deploy (Blueprint alternative)
-
-1. Push `render.yaml` to `main`.
-2. In Render: **Blueprints ΓåÆ New Blueprint Instance**, select this repo.
-3. Render creates both services and builds them. Fill in the secrets that are
-   marked `sync: false` (they are intentionally not stored in git):
-   * backend ΓÇö `SUPABASE_URL`, `SUPABASE_ANON_KEY`,
-     `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_JWT_SECRET`, `DATABASE_URL`
-   * frontend ΓÇö `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`
-4. `ALLOWED_ORIGINS` (backend) and `VITE_API_URL` (frontend) are wired
-   automatically via `fromService`, so CORS resolves without hard-coded hosts.
-
-Subsequent pushes to `main` trigger an automatic rebuild of both services.
-
-### Frontend environment variables (important)
-
-Vite inlines `import.meta.env` at **build** time, and Render does not pass plain
-env vars into `docker build`. To work around this, the frontend container writes
-a `/env.js` shim at startup containing every `VITE_*` variable present in the
-container environment. Read config like this:
-
-```ts
-const apiUrl =
-  import.meta.env.VITE_API_URL ||
-  (window as any).__DOGFOOD_ENV__?.VITE_API_URL;
-```
-
-The React app is expected to append `/api` to `VITE_API_URL` itself, since
-`RENDER_EXTERNAL_URL` cannot include a path prefix.
-
-### Local production images
-
-```bash
-# Backend on :8000, frontend (nginx) on :8080
-docker compose up --build
-
-# Frontend with Vite HMR on :5173 instead
-docker compose --profile dev up frontend-dev
-```
+| Method | Endpoint | Description | Auth Required |
+| :--- | :--- | :--- | :---: |
+| `GET` | `/health` | Liveness probe returning server health | ❌ |
+| `GET` | `/health/db` | Database readiness check verifying active pool connection | ❌ |
+| `GET` | `/api/events` | List active hackathon events and deadlines | ❌ |
+| `POST` | `/api/events` | Create a new hackathon event (Admin only) | ✅ |
+| `GET` | `/api/teams` | Retrieve user teams and membership status | ✅ |
+| `POST` | `/api/teams/join`| Join a team using an invite code | ✅ |
+| `GET` | `/api/submissions` | List all submitted projects (Randomized Gallery) | ❌ |
+| `POST` | `/api/submissions` | Create or update a project submission | ✅ |
+| `POST` | `/api/submissions/{id}/submit` | Lock and officially submit project for judging | ✅ |
+| `GET` | `/api/judges/assignments` | List submissions assigned to the current judge | ✅ |
+| `POST` | `/api/scores` | Submit signed rubric evaluation for a project | ✅ |
+| `POST` | `/api/votes` | Cast a community vote for a project | ✅ |
+| `GET` | `/api/results/{eventId}` | Retrieve finalized hackathon results and rankings | ❌ |
 
 ---
 
-## Team Ownership & Repository Rules
+## ☁️ Deployment (Render Cloud Blueprint)
 
-Please consult [repo.md](file:///c:/Projects/DOGFOOD-/repo.md) for detailed architectural boundaries, team ownership map, and Git branch workflows.
+The project includes automated deployment definitions in `render.yaml`:
+
+| Service | Type | Context | Live Target |
+| :--- | :--- | :--- | :--- |
+| **`dogfood-backend`** | Docker Web Service | Root (`.`) | FastAPI REST API Server |
+| **`dogfood-frontend`** | Docker Web Service | `./frontend` | Nginx React SPA Client |
+
+### Automatic Deploy:
+1. Connect this repository to your **Render Dashboard**.
+2. Create a **New Blueprint Instance** from `render.yaml`.
+3. Set your Supabase environment secrets in the Render dashboard.
+4. Render automatically triggers zero-downtime builds on every push to `main`.
+
+---
+
+## 🛡️ Team Architecture & Contributing
+
+For full details on team branch workflows, domain ownership boundaries, and database schemas, please consult [repo.md](repo.md).
